@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest run",
+    "test:int": "DATABASE_URL=${TEST_DATABASE_URL:-postgres://gym:gym@localhost:5432/gym_test} JWT_SECRET=test-secret vitest run",
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js"
