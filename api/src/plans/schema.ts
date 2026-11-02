@@ -21,6 +21,7 @@ export const blankPlanCreate = z.object({ name: z.string().min(1) });
 export const planUpdate = z.object({
   name: z.string().min(1).optional(),
   is_active: z.boolean().optional(),
+  is_template: z.boolean().optional(),
 });
 export const dayCreate = z.object({ name: z.string().min(1) });
 export const dayUpdate = z.object({

@@ -1,4 +1,5 @@
 import { pool, query } from '../db.js';
+import { config } from '../config.js';
 import type { PlanImport } from './schema.js';
 
 export async function createPlanFromImport(userId: string, data: PlanImport): Promise<{ id: string }> {
@@ -50,8 +51,9 @@ export async function listVisiblePlans(userId: string) {
 }
 
 export async function getPlanTree(userId: string, planId: string) {
-  const plan = await query<{ id: string; name: string; is_active: boolean }>(
-    'SELECT id, name, is_active FROM plans WHERE id=$1 AND user_id=$2', [planId, userId]);
+  const plan = await query<{ id: string; name: string; is_active: boolean; is_template: boolean; owned: boolean }>(
+    `SELECT id, name, is_active, is_template, (user_id = $2) AS owned
+     FROM plans WHERE id=$1 AND (user_id=$2 OR is_template=true)`, [planId, userId]);
   if (!plan.rows[0]) return null;
   const days = await query(
     'SELECT id, name, order_index FROM plan_days WHERE plan_id=$1 ORDER BY order_index', [planId]);
@@ -84,10 +86,21 @@ export async function userOwnsExercise(userId: string, exId: string): Promise<bo
      WHERE de.id=$1 AND p.user_id=$2`, [exId, userId]);
   return r.rowCount! > 0;
 }
-export async function updatePlan(planId: string, fields: { name?: string; is_active?: boolean }) {
+export async function isAdminUser(userId: string): Promise<boolean> {
+  const r = await query<{ login: string }>('SELECT login FROM users WHERE id=$1', [userId]);
+  return r.rows[0]?.login === config.adminLogin;
+}
+export async function userCanReadPlanDay(userId: string, dayId: string): Promise<boolean> {
+  const r = await query(
+    `SELECT 1 FROM plan_days pd JOIN plans p ON p.id=pd.plan_id
+     WHERE pd.id=$1 AND (p.user_id=$2 OR p.is_template=true)`, [dayId, userId]);
+  return r.rowCount! > 0;
+}
+export async function updatePlan(planId: string, fields: { name?: string; is_active?: boolean; is_template?: boolean }) {
   const sets: string[] = []; const vals: unknown[] = [];
   if (fields.name !== undefined) { vals.push(fields.name); sets.push(`name=$${vals.length}`); }
   if (fields.is_active !== undefined) { vals.push(fields.is_active); sets.push(`is_active=$${vals.length}`); }
+  if (fields.is_template !== undefined) { vals.push(fields.is_template); sets.push(`is_template=$${vals.length}`); }
   if (!sets.length) return;
   vals.push(planId);
   await query(`UPDATE plans SET ${sets.join(',')} WHERE id=$${vals.length}`, vals);

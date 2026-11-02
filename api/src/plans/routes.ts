@@ -3,7 +3,7 @@ import { requireAuth } from '../auth/middleware.js';
 import { importSchema, planUpdate, dayCreate, dayUpdate, exerciseUpsert, blankPlanCreate } from './schema.js';
 import {
   createPlanFromImport, listVisiblePlans, createBlankPlan, getPlanTree, exportPlan,
-  userOwnsPlan, userOwnsPlanDay, userOwnsExercise,
+  userOwnsPlan, userOwnsPlanDay, userOwnsExercise, isAdminUser, userCanReadPlanDay,
   updatePlan, addDay, updateDay, deleteDay, addExercise, updateExercise, deleteExercise,
   getDayWithExercises,
 } from './repo.js';
@@ -44,6 +44,9 @@ plansRouter.put('/:id', async (req, res) => {
   if (!(await userOwnsPlan(req.userId!, req.params.id))) { res.status(404).json({ error: 'not found' }); return; }
   const p = planUpdate.safeParse(req.body);
   if (!p.success) { res.status(400).json({ error: 'invalid' }); return; }
+  if (p.data.is_template !== undefined && !(await isAdminUser(req.userId!))) {
+    res.status(403).json({ error: 'admin only' }); return;
+  }
   await updatePlan(req.params.id, p.data);
   res.json({ id: req.params.id, ...p.data });
 });
@@ -59,7 +62,7 @@ export const plansSubRouter = Router();
 plansSubRouter.use(requireAuth);
 
 plansSubRouter.get('/plan-days/:id', async (req, res) => {
-  if (!(await userOwnsPlanDay(req.userId!, req.params.id))) { res.status(404).json({ error: 'not found' }); return; }
+  if (!(await userCanReadPlanDay(req.userId!, req.params.id))) { res.status(404).json({ error: 'not found' }); return; }
   res.json(await getDayWithExercises(req.params.id));
 });
 plansSubRouter.put('/plan-days/:id', async (req, res) => {
