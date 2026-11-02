@@ -111,6 +111,15 @@ export async function updateExercise(exId: string, fields: Record<string, unknow
 }
 export async function deleteExercise(exId: string) { await query('DELETE FROM day_exercises WHERE id=$1', [exId]); }
 
+export async function getDayWithExercises(dayId: string) {
+  const day = await query<{ id: string; name: string }>('SELECT id, name FROM plan_days WHERE id=$1', [dayId]);
+  if (!day.rows[0]) return null;
+  const exercises = await query(
+    `SELECT id, exercise_name, order_index, target_sets, target_reps, rest_seconds, starting_weight::float8 AS starting_weight
+     FROM day_exercises WHERE plan_day_id=$1 ORDER BY order_index`, [dayId]);
+  return { ...day.rows[0], exercises: exercises.rows };
+}
+
 export async function exportPlan(userId: string, planId: string) {
   const tree = await getPlanTree(userId, planId);
   if (!tree) return null;

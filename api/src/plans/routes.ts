@@ -5,6 +5,7 @@ import {
   createPlanFromImport, listPlans, getPlanTree, exportPlan,
   userOwnsPlan, userOwnsPlanDay, userOwnsExercise,
   updatePlan, addDay, updateDay, deleteDay, addExercise, updateExercise, deleteExercise,
+  getDayWithExercises,
 } from './repo.js';
 
 export const plansRouter = Router();
@@ -51,6 +52,10 @@ plansRouter.post('/:id/days', async (req, res) => {
 export const plansSubRouter = Router();
 plansSubRouter.use(requireAuth);
 
+plansSubRouter.get('/plan-days/:id', async (req, res) => {
+  if (!(await userOwnsPlanDay(req.userId!, req.params.id))) { res.status(404).json({ error: 'not found' }); return; }
+  res.json(await getDayWithExercises(req.params.id));
+});
 plansSubRouter.put('/plan-days/:id', async (req, res) => {
   if (!(await userOwnsPlanDay(req.userId!, req.params.id))) { res.status(404).json({ error: 'not found' }); return; }
   const p = dayUpdate.safeParse(req.body);
