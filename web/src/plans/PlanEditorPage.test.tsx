@@ -25,7 +25,7 @@ it('shows days and exercises and can add an exercise', async () => {
   const spy = vi.spyOn(client, 'apiFetch');
   spy.mockImplementation(async (path: string, init?: RequestInit) => {
     if (path.endsWith('/plan/p1') || path === '/api/plans/p1') {
-      return { id: 'p1', name: 'P', is_active: false,
+      return { id: 'p1', name: 'P', is_active: false, is_template: false, owned: true,
         days: [{ id: 'd1', name: 'Push', order_index: 0, exercises: [
           { id: 'e1', exercise_name: 'Bench', order_index: 0, target_sets: 3, target_reps: 8, rest_seconds: null, starting_weight: 40 },
         ] }] } as any;
@@ -39,4 +39,26 @@ it('shows days and exercises and can add an exercise', async () => {
   await userEvent.click(screen.getByRole('button', { name: /add exercise/i }));
   await waitFor(() => expect(spy).toHaveBeenCalledWith('/api/plan-days/d1/exercises',
     expect.objectContaining({ method: 'POST' })));
+});
+
+it('forks a non-owned template on first edit', async () => {
+  const spy = vi.spyOn(client, 'apiFetch');
+  spy.mockImplementation(async (path: string, init?: RequestInit) => {
+    if (path === '/api/plans/t1') return {
+      id: 't1', name: 'Shared', is_active: false, is_template: true, owned: false,
+      days: [{ id: 'd1', name: 'Push', order_index: 0, exercises: [] }],
+    } as any;
+    if (path === '/api/plans/t1/fork' && init?.method === 'POST')
+      return { id: 'c1', dayIdMap: { d1: 'cd1' }, exerciseIdMap: {} } as any;
+    if (path === '/api/plans/c1') return {
+      id: 'c1', name: 'Shared', is_active: false, is_template: false, owned: true,
+      days: [{ id: 'cd1', name: 'Push', order_index: 0, exercises: [] }],
+    } as any;
+    if (path === '/api/plan-days/cd1/exercises' && init?.method === 'POST') return { id: 'e9' } as any;
+    return {} as any;
+  });
+  renderAt('t1');
+  await screen.findByText('Shared');
+  await userEvent.click(screen.getByRole('button', { name: /add exercise/i }));
+  await waitFor(() => expect(spy).toHaveBeenCalledWith('/api/plans/t1/fork', expect.objectContaining({ method: 'POST' })));
 });
