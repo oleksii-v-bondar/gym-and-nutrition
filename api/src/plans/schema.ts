@@ -15,3 +15,21 @@ export const importSchema = z.object({
   days: z.array(dayImport),
 });
 export type PlanImport = z.infer<typeof importSchema>;
+
+export const planUpdate = z.object({
+  name: z.string().min(1).optional(),
+  is_active: z.boolean().optional(),
+});
+export const dayCreate = z.object({ name: z.string().min(1) });
+export const dayUpdate = z.object({
+  name: z.string().min(1).optional(),
+  order_index: z.number().int().nonnegative().optional(),
+});
+export const exerciseUpsert = z.object({
+  exercise_name: z.string().min(1).optional(),
+  order_index: z.number().int().nonnegative().optional(),
+  target_sets: z.number().int().positive().optional(),
+  target_reps: z.number().int().positive().optional(),
+  rest_seconds: z.number().int().nonnegative().nullable().optional(),
+  starting_weight: z.number().nonnegative().nullable().optional(),
+});
