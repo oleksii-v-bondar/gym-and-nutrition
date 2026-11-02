@@ -14,6 +14,7 @@ const setBody = z.object({
   weight_used: z.number().nonnegative(),
   reps_done: z.number().int().nonnegative(),
   effort: z.enum(['easy', 'ok', 'hard', 'failed']),
+  extra_segments: z.array(z.object({ weight: z.number().nonnegative(), reps: z.number().int().nonnegative() })).optional(),
 });
 
 sessionsRouter.post('/', async (req, res) => {

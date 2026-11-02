@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS set_logs (
   weight_used numeric NOT NULL,
   reps_done int NOT NULL,
   effort effort_level NOT NULL,
+  extra_segments jsonb NOT NULL DEFAULT '[]',
   created_at timestamptz NOT NULL DEFAULT now()
 );
 

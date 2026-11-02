@@ -10,11 +10,12 @@ export async function startSession(userId: string, planDayId: string) {
 }
 export async function logSet(sessionId: string, s: {
   day_exercise_id: string; set_number: number; weight_used: number; reps_done: number; effort: string;
+  extra_segments?: Array<{ weight: number; reps: number }>;
 }) {
   const r = await query<{ id: string }>(
-    `INSERT INTO set_logs (session_id, day_exercise_id, set_number, weight_used, reps_done, effort)
-     VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
-    [sessionId, s.day_exercise_id, s.set_number, s.weight_used, s.reps_done, s.effort]);
+    `INSERT INTO set_logs (session_id, day_exercise_id, set_number, weight_used, reps_done, effort, extra_segments)
+     VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb) RETURNING id`,
+    [sessionId, s.day_exercise_id, s.set_number, s.weight_used, s.reps_done, s.effort, JSON.stringify(s.extra_segments ?? [])]);
   return r.rows[0];
 }
 export async function finishSession(sessionId: string) {
@@ -26,7 +27,7 @@ export async function getSession(sessionId: string) {
   const s = await query('SELECT id, plan_day_id, started_at, finished_at FROM workout_sessions WHERE id=$1', [sessionId]);
   if (!s.rows[0]) return null;
   const sets = await query(
-    `SELECT id, day_exercise_id, set_number, weight_used::float8 AS weight_used, reps_done, effort, created_at
+    `SELECT id, day_exercise_id, set_number, weight_used::float8 AS weight_used, reps_done, effort, extra_segments, created_at
      FROM set_logs WHERE session_id=$1 ORDER BY set_number`, [sessionId]);
   return { ...s.rows[0], sets: sets.rows };
 }
