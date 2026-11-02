@@ -4,7 +4,7 @@ import { apiFetch } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { NavBar } from '../ui/NavBar';
 
-interface Exercise { id: string; exercise_name: string; order_index: number; target_sets: number; target_reps: number; rest_seconds: number | null; starting_weight: number | null; }
+interface Exercise { id: string; exercise_name: string; order_index: number; target_sets: number; target_reps: number; rest_seconds: number | null; starting_weight: number | null; extra_segments: number; }
 interface Day { id: string; name: string; order_index: number; exercises: Exercise[]; }
 interface PlanTree { id: string; name: string; is_active: boolean; is_template: boolean; owned: boolean; days: Day[]; }
 interface Fork { id: string; dayIdMap: Record<string, string>; exerciseIdMap: Record<string, string>; }
@@ -93,6 +93,8 @@ export function PlanEditorPage() {
                 onBlur={(e) => { if (Number(e.target.value) !== ex.target_sets) onPatchExercise(ex.id, { target_sets: Number(e.target.value) }); }} />
               <input type="number" defaultValue={ex.target_reps} style={{ width: 70 }}
                 onBlur={(e) => { if (Number(e.target.value) !== ex.target_reps) onPatchExercise(ex.id, { target_reps: Number(e.target.value) }); }} />
+              <input type="number" defaultValue={ex.extra_segments} style={{ width: 60 }} title="extra segments"
+                onBlur={(e) => { if (Number(e.target.value) !== ex.extra_segments) onPatchExercise(ex.id, { extra_segments: Number(e.target.value) }); }} />
               <Link to={`/progress/${ex.id}`}><button className="secondary">📈</button></Link>
               <button className="secondary" onClick={() => onDelExercise(ex.id)}>✕</button>
             </div>
