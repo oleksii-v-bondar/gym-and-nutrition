@@ -5,7 +5,7 @@ import { apiFetch } from '../api/client';
 import { NavBar } from '../ui/NavBar';
 import { ExerciseLogger } from './ExerciseLogger';
 
-interface Exercise { id: string; exercise_name: string; target_sets: number; target_reps: number; }
+interface Exercise { id: string; exercise_name: string; target_sets: number; target_reps: number; extra_segments: number; }
 interface Day { id: string; name: string; exercises: Exercise[]; }
 interface Suggestion { weight: number | null; reason: string; }
 type Effort = 'easy' | 'ok' | 'hard' | 'failed';
@@ -36,10 +36,11 @@ export function SessionPage() {
     enabled: !!exercise,
   });
 
-  async function onLog(weight: number, reps: number, effort: Effort) {
+  async function onLog(weight: number, reps: number, effort: Effort, segments: Array<{ weight: number; reps: number }>) {
     if (!sessionId || !exercise) return;
     await apiFetch(`/api/sessions/${sessionId}/sets`, { method: 'POST', body: JSON.stringify({
-      day_exercise_id: exercise.id, set_number: setNumber, weight_used: weight, reps_done: reps, effort }) });
+      day_exercise_id: exercise.id, set_number: setNumber, weight_used: weight, reps_done: reps, effort,
+      extra_segments: segments }) });
     if (setNumber >= exercise.target_sets) {
       if (idx + 1 >= (day.data?.exercises.length ?? 0)) { setDone(true); }
       else { setIdx(idx + 1); setSetNumber(1); }
@@ -77,6 +78,7 @@ export function SessionPage() {
               setNumber={setNumber}
               suggestedWeight={suggestion.data?.weight ?? null}
               suggestionReason={suggestion.data?.reason ?? ''}
+              extraSegments={exercise.extra_segments ?? 0}
               onLog={onLog}
             />
           )}
