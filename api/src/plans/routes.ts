@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { requireAuth } from '../auth/middleware.js';
-import { importSchema, planUpdate, dayCreate, dayUpdate, exerciseUpsert } from './schema.js';
+import { importSchema, planUpdate, dayCreate, dayUpdate, exerciseUpsert, blankPlanCreate } from './schema.js';
 import {
-  createPlanFromImport, listPlans, getPlanTree, exportPlan,
+  createPlanFromImport, listVisiblePlans, createBlankPlan, getPlanTree, exportPlan,
   userOwnsPlan, userOwnsPlanDay, userOwnsExercise,
   updatePlan, addDay, updateDay, deleteDay, addExercise, updateExercise, deleteExercise,
   getDayWithExercises,
@@ -12,7 +12,13 @@ export const plansRouter = Router();
 plansRouter.use(requireAuth);
 
 plansRouter.get('/', async (req, res) => {
-  res.json(await listPlans(req.userId!));
+  res.json(await listVisiblePlans(req.userId!));
+});
+
+plansRouter.post('/', async (req, res) => {
+  const p = blankPlanCreate.safeParse(req.body);
+  if (!p.success) { res.status(400).json({ error: 'invalid' }); return; }
+  res.status(201).json(await createBlankPlan(req.userId!, p.data.name));
 });
 
 plansRouter.post('/import', async (req, res) => {

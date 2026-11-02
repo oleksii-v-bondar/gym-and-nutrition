@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS plans (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name text NOT NULL,
-  is_active boolean NOT NULL DEFAULT false
+  is_active boolean NOT NULL DEFAULT false,
+  is_template boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS plan_days (

@@ -36,6 +36,19 @@ export async function listPlans(userId: string) {
   return r.rows;
 }
 
+export async function createBlankPlan(userId: string, name: string): Promise<{ id: string }> {
+  const r = await query<{ id: string }>(
+    'INSERT INTO plans (user_id, name, is_active, is_template) VALUES ($1,$2,false,false) RETURNING id', [userId, name]);
+  return r.rows[0];
+}
+
+export async function listVisiblePlans(userId: string) {
+  const r = await query(
+    `SELECT id, name, is_active, is_template, (user_id = $1) AS owned
+     FROM plans WHERE user_id = $1 OR is_template = true ORDER BY is_template, name`, [userId]);
+  return r.rows;
+}
+
 export async function getPlanTree(userId: string, planId: string) {
   const plan = await query<{ id: string; name: string; is_active: boolean }>(
     'SELECT id, name, is_active FROM plans WHERE id=$1 AND user_id=$2', [planId, userId]);

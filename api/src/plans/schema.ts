@@ -16,6 +16,8 @@ export const importSchema = z.object({
 });
 export type PlanImport = z.infer<typeof importSchema>;
 
+export const blankPlanCreate = z.object({ name: z.string().min(1) });
+
 export const planUpdate = z.object({
   name: z.string().min(1).optional(),
   is_active: z.boolean().optional(),
