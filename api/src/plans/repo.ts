@@ -17,9 +17,9 @@ export async function createPlanFromImport(userId: string, data: PlanImport): Pr
       for (let e = 0; e < day.exercises.length; e++) {
         const ex = day.exercises[e];
         await client.query(
-          `INSERT INTO day_exercises (plan_day_id, exercise_name, order_index, target_sets, target_reps, rest_seconds, starting_weight)
-           VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-          [dayId, ex.exercise_name, e, ex.target_sets, ex.target_reps, ex.rest_seconds ?? null, ex.starting_weight ?? null]);
+          `INSERT INTO day_exercises (plan_day_id, exercise_name, order_index, target_sets, target_reps, rest_seconds, starting_weight, extra_segments)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+          [dayId, ex.exercise_name, e, ex.target_sets, ex.target_reps, ex.rest_seconds ?? null, ex.starting_weight ?? null, ex.extra_segments ?? 0]);
       }
     }
     await client.query('COMMIT');
@@ -58,7 +58,7 @@ export async function getPlanTree(userId: string, planId: string) {
   const days = await query(
     'SELECT id, name, order_index FROM plan_days WHERE plan_id=$1 ORDER BY order_index', [planId]);
   const exercises = await query(
-    `SELECT de.id, de.plan_day_id, de.exercise_name, de.order_index, de.target_sets, de.target_reps, de.rest_seconds, de.starting_weight
+    `SELECT de.id, de.plan_day_id, de.exercise_name, de.order_index, de.target_sets, de.target_reps, de.rest_seconds, de.starting_weight, de.extra_segments
      FROM day_exercises de JOIN plan_days pd ON pd.id = de.plan_day_id
      WHERE pd.plan_id=$1 ORDER BY de.order_index`, [planId]);
   return {
@@ -122,13 +122,13 @@ export async function updateDay(dayId: string, fields: { name?: string; order_in
 export async function deleteDay(dayId: string) { await query('DELETE FROM plan_days WHERE id=$1', [dayId]); }
 export async function addExercise(dayId: string, ex: any) {
   const r = await query<{ id: string }>(
-    `INSERT INTO day_exercises (plan_day_id, exercise_name, order_index, target_sets, target_reps, rest_seconds, starting_weight)
-     VALUES ($1,$2,(SELECT COALESCE(MAX(order_index)+1,0) FROM day_exercises WHERE plan_day_id=$1),$3,$4,$5,$6) RETURNING id`,
-    [dayId, ex.exercise_name, ex.target_sets, ex.target_reps, ex.rest_seconds ?? null, ex.starting_weight ?? null]);
+    `INSERT INTO day_exercises (plan_day_id, exercise_name, order_index, target_sets, target_reps, rest_seconds, starting_weight, extra_segments)
+     VALUES ($1,$2,(SELECT COALESCE(MAX(order_index)+1,0) FROM day_exercises WHERE plan_day_id=$1),$3,$4,$5,$6,$7) RETURNING id`,
+    [dayId, ex.exercise_name, ex.target_sets, ex.target_reps, ex.rest_seconds ?? null, ex.starting_weight ?? null, ex.extra_segments ?? 0]);
   return r.rows[0];
 }
 export async function updateExercise(exId: string, fields: Record<string, unknown>) {
-  const cols = ['exercise_name','order_index','target_sets','target_reps','rest_seconds','starting_weight'];
+  const cols = ['exercise_name','order_index','target_sets','target_reps','rest_seconds','starting_weight','extra_segments'];
   const sets: string[] = []; const vals: unknown[] = [];
   for (const c of cols) if (fields[c] !== undefined) { vals.push(fields[c]); sets.push(`${c}=$${vals.length}`); }
   if (!sets.length) return;
@@ -159,14 +159,14 @@ export async function forkPlan(userId: string, planId: string) {
       dayIdMap[d.id] = nd.rows[0].id;
     }
     const exs = await client.query<any>(
-      `SELECT de.id, de.plan_day_id, de.exercise_name, de.order_index, de.target_sets, de.target_reps, de.rest_seconds, de.starting_weight
+      `SELECT de.id, de.plan_day_id, de.exercise_name, de.order_index, de.target_sets, de.target_reps, de.rest_seconds, de.starting_weight, de.extra_segments
        FROM day_exercises de JOIN plan_days pd ON pd.id=de.plan_day_id
        WHERE pd.plan_id=$1 ORDER BY de.order_index`, [planId]);
     for (const e of exs.rows) {
       const ne = await client.query<{ id: string }>(
-        `INSERT INTO day_exercises (plan_day_id, exercise_name, order_index, target_sets, target_reps, rest_seconds, starting_weight)
-         VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
-        [dayIdMap[e.plan_day_id], e.exercise_name, e.order_index, e.target_sets, e.target_reps, e.rest_seconds, e.starting_weight]);
+        `INSERT INTO day_exercises (plan_day_id, exercise_name, order_index, target_sets, target_reps, rest_seconds, starting_weight, extra_segments)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
+        [dayIdMap[e.plan_day_id], e.exercise_name, e.order_index, e.target_sets, e.target_reps, e.rest_seconds, e.starting_weight, e.extra_segments]);
       exerciseIdMap[e.id] = ne.rows[0].id;
     }
     await client.query('COMMIT');
@@ -183,7 +183,7 @@ export async function getDayWithExercises(dayId: string) {
   const day = await query<{ id: string; name: string }>('SELECT id, name FROM plan_days WHERE id=$1', [dayId]);
   if (!day.rows[0]) return null;
   const exercises = await query(
-    `SELECT id, exercise_name, order_index, target_sets, target_reps, rest_seconds, starting_weight::float8 AS starting_weight
+    `SELECT id, exercise_name, order_index, target_sets, target_reps, rest_seconds, starting_weight::float8 AS starting_weight, extra_segments
      FROM day_exercises WHERE plan_day_id=$1 ORDER BY order_index`, [dayId]);
   return { ...day.rows[0], exercises: exercises.rows };
 }
@@ -197,7 +197,7 @@ export async function exportPlan(userId: string, planId: string) {
       name: d.name,
       exercises: d.exercises.map((e: any) => ({
         exercise_name: e.exercise_name, target_sets: e.target_sets, target_reps: e.target_reps,
-        rest_seconds: e.rest_seconds, starting_weight: e.starting_weight,
+        rest_seconds: e.rest_seconds, starting_weight: e.starting_weight, extra_segments: e.extra_segments,
       })),
     })),
   };
