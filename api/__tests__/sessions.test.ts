@@ -50,3 +50,16 @@ it('blocks logging into another user session', async () => {
     .send({ day_exercise_id: exId, set_number: 1, weight_used: 40, reps_done: 8, effort: 'ok' });
   expect(r.status).toBe(404);
 });
+
+it("blocks logging a set for another user's exercise", async () => {
+  const tA = await auth('a@x.com'); const Ha = { Authorization: `Bearer ${tA}` };
+  const { exId: aExId } = await seed(tA);
+
+  const tB = await auth('b@x.com'); const Hb = { Authorization: `Bearer ${tB}` };
+  const { dayId: bDayId } = await seed(tB);
+  const bSess = await request(app).post('/api/sessions').set(Hb).send({ plan_day_id: bDayId });
+
+  const r = await request(app).post(`/api/sessions/${bSess.body.id}/sets`).set(Hb)
+    .send({ day_exercise_id: aExId, set_number: 1, weight_used: 40, reps_done: 8, effort: 'ok' });
+  expect(r.status).toBe(404);
+});

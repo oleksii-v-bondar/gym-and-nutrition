@@ -38,7 +38,7 @@ export async function latestCompletedSessionSets(userId: string, dayExerciseId: 
        AND ws.id = (
          SELECT ws2.id FROM set_logs sl2 JOIN workout_sessions ws2 ON ws2.id = sl2.session_id
          WHERE sl2.day_exercise_id=$1 AND ws2.user_id=$2 AND ws2.finished_at IS NOT NULL
-         ORDER BY ws2.finished_at DESC LIMIT 1)
+         ORDER BY ws2.finished_at DESC, ws2.id DESC LIMIT 1)
      ORDER BY sl.set_number`, [dayExerciseId, userId]);
   return r.rows;
 }

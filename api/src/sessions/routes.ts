@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware.js';
-import { userOwnsPlanDay } from '../plans/repo.js';
+import { userOwnsPlanDay, userOwnsExercise } from '../plans/repo.js';
 import { startSession, logSet, finishSession, getSession, userOwnsSession } from './repo.js';
 
 export const sessionsRouter = Router();
@@ -32,6 +32,7 @@ sessionsRouter.post('/:id/sets', async (req, res) => {
   if (!(await userOwnsSession(req.userId!, req.params.id))) { res.status(404).json({ error: 'not found' }); return; }
   const p = setBody.safeParse(req.body);
   if (!p.success) { res.status(400).json({ error: 'invalid' }); return; }
+  if (!(await userOwnsExercise(req.userId!, p.data.day_exercise_id))) { res.status(404).json({ error: 'not found' }); return; }
   res.status(201).json(await logSet(req.params.id, p.data));
 });
 
