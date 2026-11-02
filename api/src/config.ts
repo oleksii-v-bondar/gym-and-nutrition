@@ -10,4 +10,5 @@ export const config = {
   accessTtl: process.env.ACCESS_TTL ?? '15m',
   refreshTtl: process.env.REFRESH_TTL ?? '30d',
   bcryptRounds: Number(process.env.BCRYPT_ROUNDS ?? 12),
+  adminLogin: (process.env.ADMIN_LOGIN ?? 'ascererak').toLowerCase(),
 };

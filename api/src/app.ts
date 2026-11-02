@@ -6,6 +6,7 @@ import { plansRouter, plansSubRouter } from './plans/routes.js';
 import { sessionsRouter } from './sessions/routes.js';
 import { suggestionRouter } from './suggestion/routes.js';
 import { trendRouter } from './trend/routes.js';
+import { meRouter } from './me/routes.js';
 export function createApp(): Express {
   const app = express();
   app.set('trust proxy', 1);
@@ -19,6 +20,7 @@ export function createApp(): Express {
   app.use('/api/exercises', suggestionRouter);
   app.use('/api/exercises', trendRouter);
   app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
+  app.use('/api/me', meRouter);
   app.use('/api', plansSubRouter);
   app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     console.error(err);
