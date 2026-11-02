@@ -8,4 +8,7 @@ button.secondary { background:#1f2937; color:var(--fg); }
 input, select { width:100%; padding:12px; font-size:16px; border-radius:10px; border:1px solid #374151; background:#0b1220; color:var(--fg); margin:6px 0; }
 .row { display:flex; gap:8px; }
 .big-tap { min-height:56px; }
+a { color:#60a5fa; font-weight:600; text-decoration:underline; }
+a:visited { color:#60a5fa; }
+a:hover { color:#93c5fd; }
 @media (min-width: 640px) { .app { max-width: 720px; } }

@@ -4,8 +4,8 @@ import { setupTestDb, resetDb, teardownTestDb } from '../src/test/helpers.js';
 const app = createApp();
 beforeAll(setupTestDb); beforeEach(resetDb); afterAll(teardownTestDb);
 async function auth(email: string) {
-  await request(app).post('/api/auth/register').send({ email, password: 'pw123456' });
-  return (await request(app).post('/api/auth/login').send({ email, password: 'pw123456' })).body.accessToken as string;
+  await request(app).post('/api/auth/register').send({ login: email, password: 'pw123456' });
+  return (await request(app).post('/api/auth/login').send({ login: email, password: 'pw123456' })).body.accessToken as string;
 }
 async function seed(token: string) {
   const plan = await request(app).post('/api/plans/import').set('Authorization', `Bearer ${token}`)

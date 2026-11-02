@@ -7,8 +7,8 @@ beforeEach(resetDb);
 afterAll(teardownTestDb);
 
 async function authFor(email: string) {
-  await request(app).post('/api/auth/register').send({ email, password: 'pw123456' });
-  const login = await request(app).post('/api/auth/login').send({ email, password: 'pw123456' });
+  await request(app).post('/api/auth/register').send({ login: email, password: 'pw123456' });
+  const login = await request(app).post('/api/auth/login').send({ login: email, password: 'pw123456' });
   return login.body.accessToken as string;
 }
 const samplePlan = {

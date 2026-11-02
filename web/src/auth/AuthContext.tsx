@@ -14,18 +14,18 @@ const Ctx = createContext<AuthCtx | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthed, setAuthed] = useState<boolean>(!!getAccessToken());
 
-  async function login(email: string, password: string) {
+  async function login(loginId: string, password: string) {
     const { accessToken, refreshToken } = await apiFetch<{ accessToken: string; refreshToken: string }>(
       '/api/auth/login',
-      { method: 'POST', body: JSON.stringify({ email, password }) },
+      { method: 'POST', body: JSON.stringify({ login: loginId, password }) },
     );
     setTokens(accessToken, refreshToken);
     setAuthed(true);
   }
 
-  async function register(email: string, password: string) {
-    await apiFetch('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password }) });
-    await login(email, password);
+  async function register(loginId: string, password: string) {
+    await apiFetch('/api/auth/register', { method: 'POST', body: JSON.stringify({ login: loginId, password }) });
+    await login(loginId, password);
   }
 
   function logout() {
