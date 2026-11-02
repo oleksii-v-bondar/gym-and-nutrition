@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../api/client';
@@ -17,11 +17,13 @@ export function SessionPage() {
   const [idx, setIdx] = useState(0);
   const [setNumber, setSetNumber] = useState(1);
   const [done, setDone] = useState(false);
+  const startedRef = useRef(false);
 
   const day = useQuery({ queryKey: ['day', dayId], queryFn: () => apiFetch<Day>(`/api/plan-days/${dayId}`) });
 
   useEffect(() => {
-    if (!sessionId) {
+    if (!sessionId && !startedRef.current) {
+      startedRef.current = true;
       apiFetch<{ id: string }>('/api/sessions', { method: 'POST', body: JSON.stringify({ plan_day_id: dayId }) })
         .then((s) => setSessionId(s.id));
     }
