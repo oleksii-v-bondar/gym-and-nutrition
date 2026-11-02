@@ -86,15 +86,23 @@ export function PlanEditorPage() {
             <button className="big-tap" onClick={() => onStartSession(day.id)}>Start session</button>
           </div>
           {day.exercises.map((ex) => (
-            <div key={ex.id} className="row" style={{ alignItems: 'center', marginTop: 8 }}>
-              <input defaultValue={ex.exercise_name}
-                onBlur={(e) => { if (e.target.value !== ex.exercise_name) onPatchExercise(ex.id, { exercise_name: e.target.value }); }} />
-              <input type="number" defaultValue={ex.target_sets} style={{ width: 70 }}
-                onBlur={(e) => { if (Number(e.target.value) !== ex.target_sets) onPatchExercise(ex.id, { target_sets: Number(e.target.value) }); }} />
-              <input type="number" defaultValue={ex.target_reps} style={{ width: 70 }}
-                onBlur={(e) => { if (Number(e.target.value) !== ex.target_reps) onPatchExercise(ex.id, { target_reps: Number(e.target.value) }); }} />
-              <input type="number" defaultValue={ex.extra_segments} style={{ width: 60 }} title="extra segments"
-                onBlur={(e) => { if (Number(e.target.value) !== ex.extra_segments) onPatchExercise(ex.id, { extra_segments: Number(e.target.value) }); }} />
+            <div key={ex.id} style={{ display: 'flex', gap: 6, alignItems: 'flex-end', marginTop: 8, flexWrap: 'wrap' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', fontSize: 10, color: 'var(--muted)', flex: 1, minWidth: 120 }}>exercise
+                <input defaultValue={ex.exercise_name}
+                  onBlur={(e) => { if (e.target.value !== ex.exercise_name) onPatchExercise(ex.id, { exercise_name: e.target.value }); }} />
+              </label>
+              <label style={{ display: 'flex', flexDirection: 'column', fontSize: 10, color: 'var(--muted)', width: 56 }}>sets
+                <input type="number" defaultValue={ex.target_sets}
+                  onBlur={(e) => { if (Number(e.target.value) !== ex.target_sets) onPatchExercise(ex.id, { target_sets: Number(e.target.value) }); }} />
+              </label>
+              <label style={{ display: 'flex', flexDirection: 'column', fontSize: 10, color: 'var(--muted)', width: 56 }}>reps
+                <input type="number" defaultValue={ex.target_reps}
+                  onBlur={(e) => { if (Number(e.target.value) !== ex.target_reps) onPatchExercise(ex.id, { target_reps: Number(e.target.value) }); }} />
+              </label>
+              <label style={{ display: 'flex', flexDirection: 'column', fontSize: 10, color: 'var(--muted)', width: 64 }}>drops/ups
+                <input type="number" defaultValue={ex.extra_segments} title="extra segments"
+                  onBlur={(e) => { if (Number(e.target.value) !== ex.extra_segments) onPatchExercise(ex.id, { extra_segments: Number(e.target.value) }); }} />
+              </label>
               <Link to={`/progress/${ex.id}`}><button className="secondary">📈</button></Link>
               <button className="secondary" onClick={() => onDelExercise(ex.id)}>✕</button>
             </div>
