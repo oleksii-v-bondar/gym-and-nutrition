@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { requireAuth } from '../auth/middleware.js';
 import { importSchema, planUpdate, dayCreate, dayUpdate, exerciseUpsert, blankPlanCreate } from './schema.js';
 import {
-  createPlanFromImport, listVisiblePlans, createBlankPlan, getPlanTree, exportPlan,
+  createPlanFromImport, listVisiblePlans, createBlankPlan, getPlanTree, exportPlan, forkPlan,
   userOwnsPlan, userOwnsPlanDay, userOwnsExercise, isAdminUser, userCanReadPlanDay,
   updatePlan, addDay, updateDay, deleteDay, addExercise, updateExercise, deleteExercise,
   getDayWithExercises,
@@ -19,6 +19,12 @@ plansRouter.post('/', async (req, res) => {
   const p = blankPlanCreate.safeParse(req.body);
   if (!p.success) { res.status(400).json({ error: 'invalid' }); return; }
   res.status(201).json(await createBlankPlan(req.userId!, p.data.name));
+});
+
+plansRouter.post('/:id/fork', async (req, res) => {
+  const forked = await forkPlan(req.userId!, req.params.id);
+  if (!forked) { res.status(404).json({ error: 'not found' }); return; }
+  res.status(201).json(forked);
 });
 
 plansRouter.post('/import', async (req, res) => {

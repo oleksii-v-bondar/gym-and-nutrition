@@ -137,6 +137,48 @@ export async function updateExercise(exId: string, fields: Record<string, unknow
 }
 export async function deleteExercise(exId: string) { await query('DELETE FROM day_exercises WHERE id=$1', [exId]); }
 
+export async function forkPlan(userId: string, planId: string) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const src = await client.query<{ name: string }>(
+      'SELECT name FROM plans WHERE id=$1 AND (user_id=$2 OR is_template=true)', [planId, userId]);
+    if (!src.rows[0]) { await client.query('ROLLBACK'); return null; }
+    const newPlan = await client.query<{ id: string }>(
+      'INSERT INTO plans (user_id, name, is_active, is_template) VALUES ($1,$2,false,false) RETURNING id',
+      [userId, src.rows[0].name]);
+    const newPlanId = newPlan.rows[0].id;
+    const dayIdMap: Record<string, string> = {};
+    const exerciseIdMap: Record<string, string> = {};
+    const days = await client.query<{ id: string; name: string; order_index: number }>(
+      'SELECT id, name, order_index FROM plan_days WHERE plan_id=$1 ORDER BY order_index', [planId]);
+    for (const d of days.rows) {
+      const nd = await client.query<{ id: string }>(
+        'INSERT INTO plan_days (plan_id, name, order_index) VALUES ($1,$2,$3) RETURNING id',
+        [newPlanId, d.name, d.order_index]);
+      dayIdMap[d.id] = nd.rows[0].id;
+    }
+    const exs = await client.query<any>(
+      `SELECT de.id, de.plan_day_id, de.exercise_name, de.order_index, de.target_sets, de.target_reps, de.rest_seconds, de.starting_weight
+       FROM day_exercises de JOIN plan_days pd ON pd.id=de.plan_day_id
+       WHERE pd.plan_id=$1 ORDER BY de.order_index`, [planId]);
+    for (const e of exs.rows) {
+      const ne = await client.query<{ id: string }>(
+        `INSERT INTO day_exercises (plan_day_id, exercise_name, order_index, target_sets, target_reps, rest_seconds, starting_weight)
+         VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
+        [dayIdMap[e.plan_day_id], e.exercise_name, e.order_index, e.target_sets, e.target_reps, e.rest_seconds, e.starting_weight]);
+      exerciseIdMap[e.id] = ne.rows[0].id;
+    }
+    await client.query('COMMIT');
+    return { id: newPlanId, dayIdMap, exerciseIdMap };
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
 export async function getDayWithExercises(dayId: string) {
   const day = await query<{ id: string; name: string }>('SELECT id, name FROM plan_days WHERE id=$1', [dayId]);
   if (!day.rows[0]) return null;
