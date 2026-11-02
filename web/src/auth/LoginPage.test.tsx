@@ -6,7 +6,7 @@ import * as AuthCtx from './AuthContext';
 
 it('submits login and password to login', async () => {
   const login = vi.fn().mockResolvedValue(undefined);
-  vi.spyOn(AuthCtx, 'useAuth').mockReturnValue({ isAuthed: false, login, register: vi.fn(), logout: vi.fn() });
+  vi.spyOn(AuthCtx, 'useAuth').mockReturnValue({ isAuthed: false, isAdmin: false, login, register: vi.fn(), logout: vi.fn() });
   render(<MemoryRouter><LoginPage /></MemoryRouter>);
   await userEvent.type(screen.getByLabelText(/login/i), 'alice');
   await userEvent.type(screen.getByLabelText(/password/i), 'pw123456');
