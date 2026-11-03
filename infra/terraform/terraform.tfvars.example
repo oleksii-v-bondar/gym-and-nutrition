@@ -1,0 +1,27 @@
+# Copy to terraform.tfvars and fill in your values.
+# terraform.tfvars is git-ignored — never commit it.
+
+tenancy_ocid      = "ocid1.tenancy.oc1..aaaaaaaa..."
+compartment_ocid  = "ocid1.compartment.oc1..aaaaaaaa..."
+region            = "eu-frankfurt-1"
+ssh_public_key    = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5... user@host"
+duckdns_token     = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+duckdns_subdomain = "mygym"
+repo_url          = "https://github.com/oleksii-v-bondar/gym-and-nutrition.git"
+git_branch        = "main"
+
+# Login that should be admin in the app (default: ascererak)
+# admin_login = "ascererak"
+
+# Availability domain index. Single-AD regions only have 0.
+# Multi-AD regions (e.g. Frankfurt) accept 0, 1, or 2 — handy when ARM capacity
+# is scarce. ad_index = 0
+
+# Keep these distinct from your existing deployment (they already default to
+# gym-tracker-* / 10.1.0.0/16, so they won't collide with progress-app).
+# name_prefix = "gym-tracker"
+
+# Optional dedicated data volume at /data. Left off by default so you stay
+# within the Always Free block-volume allowance your existing app uses.
+# attach_block_volume   = false
+# block_volume_size_gbs = 50
