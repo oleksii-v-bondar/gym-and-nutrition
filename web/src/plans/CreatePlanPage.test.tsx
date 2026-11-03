@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '../auth/AuthContext';
+import * as AuthCtx from '../auth/AuthContext';
 import { CreatePlanPage } from './CreatePlanPage';
 import * as client from '../api/client';
 
@@ -19,4 +20,15 @@ it('creates a plan and navigates to it', async () => {
   await userEvent.click(pageBtn);
   await waitFor(() => expect(spy).toHaveBeenCalledWith('/api/plans',
     expect.objectContaining({ method: 'POST', body: expect.stringContaining('Legs') })));
+  // import is admin-only; a non-admin should not see it
+  expect(screen.queryByRole('button', { name: /import/i })).toBeNull();
+});
+
+it('shows the import button for admins', () => {
+  vi.spyOn(AuthCtx, 'useAuth').mockReturnValue({
+    isAuthed: true, isAdmin: true, login: vi.fn(), register: vi.fn(), logout: vi.fn(),
+  } as any);
+  const qc = new QueryClient();
+  render(<QueryClientProvider client={qc}><MemoryRouter><CreatePlanPage /></MemoryRouter></QueryClientProvider>);
+  expect(screen.getByRole('button', { name: /import/i })).toBeInTheDocument();
 });

@@ -12,7 +12,7 @@ function renderPage() {
   );
 }
 
-it('badges templates and hides import for non-admins', async () => {
+it('lists plans and badges templates', async () => {
   const spy = vi.spyOn(client, 'apiFetch');
   spy.mockImplementation(async (path: string) => {
     if (path === '/api/plans') return [
@@ -24,6 +24,4 @@ it('badges templates and hides import for non-admins', async () => {
   renderPage();
   expect(await screen.findByText('Shared')).toBeInTheDocument();
   expect(screen.getByText(/template/i)).toBeInTheDocument();
-  // import is admin-only; a non-admin should not see it
-  expect(screen.queryByRole('button', { name: /import/i })).toBeNull();
 });
