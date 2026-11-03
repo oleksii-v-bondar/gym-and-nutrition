@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { requireAuth } from '../auth/middleware.js';
 import { importSchema, planUpdate, dayCreate, dayUpdate, exerciseUpsert, blankPlanCreate } from './schema.js';
 import {
-  createPlanFromImport, listVisiblePlans, createBlankPlan, getPlanTree, exportPlan, forkPlan,
+  createPlanFromImport, listVisiblePlans, createBlankPlan, getPlanTree, exportPlan, forkPlan, softDeletePlan,
   userOwnsPlan, userOwnsPlanDay, userOwnsExercise, isAdminUser, userCanReadPlanDay,
   updatePlan, addDay, updateDay, deleteDay, addExercise, updateExercise, deleteExercise,
   getDayWithExercises,
@@ -25,6 +25,14 @@ plansRouter.post('/:id/fork', async (req, res) => {
   const forked = await forkPlan(req.userId!, req.params.id);
   if (!forked) { res.status(404).json({ error: 'not found' }); return; }
   res.status(201).json(forked);
+});
+
+plansRouter.delete('/:id', async (req, res) => {
+  const owns = await userOwnsPlan(req.userId!, req.params.id);
+  if (!owns && !(await isAdminUser(req.userId!))) { res.status(404).json({ error: 'not found' }); return; }
+  const ok = await softDeletePlan(req.params.id);
+  if (!ok) { res.status(404).json({ error: 'not found' }); return; }
+  res.status(204).end();
 });
 
 plansRouter.post('/import', async (req, res) => {

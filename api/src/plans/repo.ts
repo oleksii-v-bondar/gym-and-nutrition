@@ -46,14 +46,19 @@ export async function createBlankPlan(userId: string, name: string): Promise<{ i
 export async function listVisiblePlans(userId: string) {
   const r = await query(
     `SELECT id, name, is_active, is_template, (user_id = $1) AS owned
-     FROM plans WHERE user_id = $1 OR is_template = true ORDER BY is_template, name`, [userId]);
+     FROM plans WHERE (user_id = $1 OR is_template = true) AND deleted_at IS NULL ORDER BY is_template, name`, [userId]);
   return r.rows;
+}
+
+export async function softDeletePlan(planId: string): Promise<boolean> {
+  const r = await query('UPDATE plans SET deleted_at=now() WHERE id=$1 RETURNING id', [planId]);
+  return r.rowCount! > 0;
 }
 
 export async function getPlanTree(userId: string, planId: string) {
   const plan = await query<{ id: string; name: string; is_active: boolean; is_template: boolean; owned: boolean }>(
     `SELECT id, name, is_active, is_template, (user_id = $2) AS owned
-     FROM plans WHERE id=$1 AND (user_id=$2 OR is_template=true)`, [planId, userId]);
+     FROM plans WHERE id=$1 AND (user_id=$2 OR is_template=true) AND deleted_at IS NULL`, [planId, userId]);
   if (!plan.rows[0]) return null;
   const days = await query(
     'SELECT id, name, order_index FROM plan_days WHERE plan_id=$1 ORDER BY order_index', [planId]);
@@ -142,7 +147,7 @@ export async function forkPlan(userId: string, planId: string) {
   try {
     await client.query('BEGIN');
     const src = await client.query<{ name: string }>(
-      'SELECT name FROM plans WHERE id=$1 AND (user_id=$2 OR is_template=true)', [planId, userId]);
+      'SELECT name FROM plans WHERE id=$1 AND (user_id=$2 OR is_template=true) AND deleted_at IS NULL', [planId, userId]);
     if (!src.rows[0]) { await client.query('ROLLBACK'); return null; }
     const newPlan = await client.query<{ id: string }>(
       'INSERT INTO plans (user_id, name, is_active, is_template) VALUES ($1,$2,false,false) RETURNING id',
