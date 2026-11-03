@@ -93,10 +93,10 @@ export function PlanEditorPage() {
       )}
       {plan.data.days.map((day) => (
         <div className="card" key={day.id}>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <input defaultValue={day.name} style={{ fontWeight: 700, flex: 1 }}
+          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+            <input defaultValue={day.name} style={{ fontWeight: 700, flex: 1, minWidth: 0 }}
               onBlur={(e) => { if (e.target.value !== day.name) onPatchDay(day.id, e.target.value); }} />
-            <button className="big-tap" onClick={() => onStartSession(day.id)}>Start session</button>
+            <button className="big-tap" style={{ width: 'auto', flex: '0 0 auto' }} onClick={() => onStartSession(day.id)}>Start session</button>
           </div>
           {day.exercises.map((ex) => (
             <div key={ex.id} style={{ display: 'flex', gap: 6, alignItems: 'flex-end', marginTop: 8, flexWrap: 'wrap' }}>
