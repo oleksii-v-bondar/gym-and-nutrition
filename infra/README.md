@@ -5,6 +5,11 @@ Cloud and runs the app with Docker Compose. TLS is automatic: the app's
 **Caddy** container provisions a Let's Encrypt certificate for your DuckDNS
 domain — no nginx/certbot wiring required.
 
+> **Can't get an ARM instance?** OCI often returns `Out of host capacity` for
+> A1.Flex. Either use `./retry-instance.sh` (below) to keep trying, or skip the
+> new VM entirely and co-host the app on an existing VM — see
+> [`../deploy/COHOSTING.md`](../deploy/COHOSTING.md).
+
 ## Will this touch my existing OCI app?
 
 **No.** This stack is designed to run alongside your existing deployment:
