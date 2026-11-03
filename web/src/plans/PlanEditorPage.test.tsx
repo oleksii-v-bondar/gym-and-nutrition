@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { PlanEditorPage } from './PlanEditorPage';
 import { AuthProvider } from '../auth/AuthContext';
+import * as AuthCtx from '../auth/AuthContext';
 import * as client from '../api/client';
 
 // PlanEditorPage renders <NavBar/>, which calls useAuth() — wrap with AuthProvider so
@@ -117,4 +118,19 @@ it('edits a day name', async () => {
   dayInput.blur();
   await waitFor(() => expect(spy).toHaveBeenCalledWith('/api/plan-days/d1',
     expect.objectContaining({ method: 'PUT', body: expect.stringContaining('"name":"Pull"') })));
+});
+
+it('admin can copy a template into a personal plan', async () => {
+  vi.spyOn(AuthCtx, 'useAuth').mockReturnValue({ isAuthed: true, isAdmin: true, login: vi.fn(), register: vi.fn(), logout: vi.fn() });
+  const spy = vi.spyOn(client, 'apiFetch');
+  spy.mockImplementation(async (path: string, init?: RequestInit) => {
+    if (path === '/api/plans/t1/fork' && init?.method === 'POST') return { id: 'c1', dayIdMap: {}, exerciseIdMap: {} } as any;
+    if (path === '/api/plans/t1') return { id: 't1', name: 'PPL', is_active: false, is_template: true, owned: true, days: [] } as any;
+    if (path === '/api/plans/c1') return { id: 'c1', name: 'PPL (My Personal)', is_active: false, is_template: false, owned: true, days: [] } as any;
+    return {} as any;
+  });
+  renderAt('t1');
+  await screen.findByText('PPL');
+  await userEvent.click(screen.getByRole('button', { name: /copy from template/i }));
+  await waitFor(() => expect(spy).toHaveBeenCalledWith('/api/plans/t1/fork', expect.objectContaining({ method: 'POST' })));
 });

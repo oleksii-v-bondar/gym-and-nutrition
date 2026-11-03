@@ -28,6 +28,7 @@ export function PlanEditorPage() {
   const patchDay = useMutation({ mutationFn: (p: { id: string; name: string }) => apiFetch(`/api/plan-days/${p.id}`, { method: 'PUT', body: JSON.stringify({ name: p.name }) }), onSuccess: refresh });
   const setTemplate = useMutation({ mutationFn: (v: boolean) => apiFetch(`/api/plans/${planId}`, { method: 'PUT', body: JSON.stringify({ is_template: v }) }), onSuccess: refresh });
   const deletePlan = useMutation({ mutationFn: () => apiFetch(`/api/plans/${planId}`, { method: 'DELETE' }), onSuccess: () => nav('/') });
+  const copyFromTemplate = useMutation({ mutationFn: () => fork(), onSuccess: (f) => nav(`/plan/${f.id}`) });
 
   // Copy-on-edit: for a non-owned template, apply the action to a fresh fork then navigate to it.
   async function onAddDay() {
@@ -85,6 +86,9 @@ export function PlanEditorPage() {
             onChange={(e) => setTemplate.mutate(e.target.checked)} />
           Shared template (visible to all users)
         </label>
+      )}
+      {isAdmin && plan.data.is_template && (
+        <button className="secondary" onClick={() => copyFromTemplate.mutate()}>Copy from template</button>
       )}
       {isAdmin && <button className="secondary" onClick={exportPlan}>Export JSON</button>}
       {(owned || isAdmin) && (
