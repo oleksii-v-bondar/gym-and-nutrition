@@ -5,6 +5,7 @@ export function NavBar() {
   return (
     <div className="row" style={{ marginBottom: 12 }}>
       <Link to="/"><button className="secondary">Plans</button></Link>
+      <Link to="/history"><button className="secondary">History</button></Link>
       <button className="secondary" onClick={logout}>Log out</button>
     </div>
   );

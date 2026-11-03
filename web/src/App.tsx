@@ -8,6 +8,8 @@ import { PlansPage } from './plans/PlansPage';
 import { PlanEditorPage } from './plans/PlanEditorPage';
 import { SessionPage } from './session/SessionPage';
 import { ProgressPage } from './progress/ProgressPage';
+import { HistoryPage } from './history/HistoryPage';
+import { SessionDetailPage } from './history/SessionDetailPage';
 
 const qc = new QueryClient();
 export default function App() {
@@ -22,6 +24,8 @@ export default function App() {
             <Route path="/plan/:planId" element={<RequireAuth><PlanEditorPage /></RequireAuth>} />
             <Route path="/session/:dayId" element={<RequireAuth><SessionPage /></RequireAuth>} />
             <Route path="/progress/:exId" element={<RequireAuth><ProgressPage /></RequireAuth>} />
+            <Route path="/history" element={<RequireAuth><HistoryPage /></RequireAuth>} />
+            <Route path="/history/:id" element={<RequireAuth><SessionDetailPage /></RequireAuth>} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
