@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../api/client';
@@ -6,7 +6,7 @@ import { NavBar } from '../ui/NavBar';
 import { ExerciseLogger } from './ExerciseLogger';
 
 interface Exercise { id: string; exercise_name: string; target_sets: number; target_reps: number; extra_segments: number; }
-interface Day { id: string; name: string; exercises: Exercise[]; }
+interface Day { id: string; name: string; is_superset: boolean; exercises: Exercise[]; }
 interface Suggestion { weight: number | null; reason: string; }
 type Effort = 'easy' | 'ok' | 'hard' | 'failed';
 
@@ -14,8 +14,7 @@ export function SessionPage() {
   const { dayId } = useParams();
   const nav = useNavigate();
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [idx, setIdx] = useState(0);
-  const [setNumber, setSetNumber] = useState(1);
+  const [step, setStep] = useState(0);
   const [done, setDone] = useState(false);
   const startedRef = useRef(false);
 
@@ -29,7 +28,26 @@ export function SessionPage() {
     }
   }, [dayId, sessionId]);
 
-  const exercise = day.data?.exercises[idx];
+  const exercises = day.data?.exercises ?? [];
+  const isSuperset = day.data?.is_superset ?? false;
+  // Flatten the session into an ordered list of (exercise, setNumber) steps.
+  // Normal days are exercise-major (all sets of A, then B); supersets are round-major
+  // (one set of each exercise per round, repeated for the exercises' set count).
+  const steps = useMemo(() => {
+    const s: Array<{ exIdx: number; setNumber: number }> = [];
+    if (isSuperset) {
+      const rounds = exercises.length ? Math.max(...exercises.map((e) => e.target_sets)) : 0;
+      for (let r = 1; r <= rounds; r++) for (let i = 0; i < exercises.length; i++) s.push({ exIdx: i, setNumber: r });
+    } else {
+      for (let i = 0; i < exercises.length; i++) for (let n = 1; n <= exercises[i].target_sets; n++) s.push({ exIdx: i, setNumber: n });
+    }
+    return s;
+  }, [exercises, isSuperset]);
+  const totalRounds = isSuperset && exercises.length ? Math.max(...exercises.map((e) => e.target_sets)) : 0;
+  const current = steps[step];
+  const exercise = current ? exercises[current.exIdx] : undefined;
+  const setNumber = current?.setNumber ?? 1;
+
   const suggestion = useQuery({
     queryKey: ['suggestion', exercise?.id],
     queryFn: () => apiFetch<Suggestion>(`/api/exercises/${exercise!.id}/suggestion`),
@@ -41,12 +59,8 @@ export function SessionPage() {
     await apiFetch(`/api/sessions/${sessionId}/sets`, { method: 'POST', body: JSON.stringify({
       day_exercise_id: exercise.id, set_number: setNumber, weight_used: weight, reps_done: reps, effort,
       extra_segments: segments }) });
-    if (setNumber >= exercise.target_sets) {
-      if (idx + 1 >= (day.data?.exercises.length ?? 0)) { setDone(true); }
-      else { setIdx(idx + 1); setSetNumber(1); }
-    } else {
-      setSetNumber(setNumber + 1);
-    }
+    if (step + 1 >= steps.length) setDone(true);
+    else setStep(step + 1);
   }
 
   async function finish() {
@@ -68,7 +82,11 @@ export function SessionPage() {
         </div>
       ) : (
         <>
-          <p style={{ color: 'var(--muted)' }}>Exercise {idx + 1}/{day.data.exercises.length}</p>
+          <p style={{ color: 'var(--muted)' }}>
+            {isSuperset
+              ? `Round ${setNumber}/${totalRounds} — Exercise ${current!.exIdx + 1}/${exercises.length}`
+              : `Exercise ${current!.exIdx + 1}/${exercises.length}`}
+          </p>
           {suggestion.isLoading ? <p>Loading suggestion…</p> : (
             <ExerciseLogger
               key={exercise.id}

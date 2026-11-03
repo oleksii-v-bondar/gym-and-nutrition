@@ -5,7 +5,7 @@ import { useAuth } from '../auth/AuthContext';
 import { NavBar } from '../ui/NavBar';
 
 interface Exercise { id: string; exercise_name: string; order_index: number; target_sets: number; target_reps: number; rest_seconds: number | null; starting_weight: number | null; extra_segments: number; }
-interface Day { id: string; name: string; order_index: number; exercises: Exercise[]; }
+interface Day { id: string; name: string; order_index: number; is_superset: boolean; exercises: Exercise[]; }
 interface PlanTree { id: string; name: string; is_active: boolean; is_template: boolean; owned: boolean; days: Day[]; }
 interface Fork { id: string; dayIdMap: Record<string, string>; exerciseIdMap: Record<string, string>; }
 
@@ -25,7 +25,7 @@ export function PlanEditorPage() {
   const addExercise = useMutation({ mutationFn: (dayId: string) => apiFetch(`/api/plan-days/${dayId}/exercises`, { method: 'POST', body: JSON.stringify({ exercise_name: 'New exercise', target_sets: 3, target_reps: 8 }) }), onSuccess: refresh });
   const delExercise = useMutation({ mutationFn: (id: string) => apiFetch(`/api/day-exercises/${id}`, { method: 'DELETE' }), onSuccess: refresh });
   const patchExercise = useMutation({ mutationFn: (p: { id: string; body: Partial<Exercise> }) => apiFetch(`/api/day-exercises/${p.id}`, { method: 'PUT', body: JSON.stringify(p.body) }), onSuccess: refresh });
-  const patchDay = useMutation({ mutationFn: (p: { id: string; name: string }) => apiFetch(`/api/plan-days/${p.id}`, { method: 'PUT', body: JSON.stringify({ name: p.name }) }), onSuccess: refresh });
+  const patchDay = useMutation({ mutationFn: (p: { id: string; body: Partial<Day> }) => apiFetch(`/api/plan-days/${p.id}`, { method: 'PUT', body: JSON.stringify(p.body) }), onSuccess: refresh });
   const setTemplate = useMutation({ mutationFn: (v: boolean) => apiFetch(`/api/plans/${planId}`, { method: 'PUT', body: JSON.stringify({ is_template: v }) }), onSuccess: refresh });
   const deletePlan = useMutation({ mutationFn: () => apiFetch(`/api/plans/${planId}`, { method: 'DELETE' }), onSuccess: () => nav('/') });
   const copyFromTemplate = useMutation({ mutationFn: () => fork(), onSuccess: (f) => nav(`/plan/${f.id}`) });
@@ -37,10 +37,10 @@ export function PlanEditorPage() {
     await apiFetch(`/api/plans/${f.id}/days`, { method: 'POST', body: JSON.stringify({ name: 'New day' }) });
     nav(`/plan/${f.id}`);
   }
-  async function onPatchDay(dayId: string, name: string) {
-    if (owned) { patchDay.mutate({ id: dayId, name }); return; }
+  async function onPatchDay(dayId: string, body: Partial<Day>) {
+    if (owned) { patchDay.mutate({ id: dayId, body }); return; }
     const f = await fork();
-    await apiFetch(`/api/plan-days/${f.dayIdMap[dayId]}`, { method: 'PUT', body: JSON.stringify({ name }) });
+    await apiFetch(`/api/plan-days/${f.dayIdMap[dayId]}`, { method: 'PUT', body: JSON.stringify(body) });
     nav(`/plan/${f.id}`);
   }
   async function onAddExercise(dayId: string) {
@@ -99,9 +99,14 @@ export function PlanEditorPage() {
         <div className="card" key={day.id}>
           <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
             <input defaultValue={day.name} style={{ fontWeight: 700, flex: 1, minWidth: 0 }}
-              onBlur={(e) => { if (e.target.value !== day.name) onPatchDay(day.id, e.target.value); }} />
+              onBlur={(e) => { if (e.target.value !== day.name) onPatchDay(day.id, { name: e.target.value }); }} />
             <button className="big-tap" style={{ width: 'auto', flex: '0 0 auto' }} onClick={() => onStartSession(day.id)}>Start session</button>
           </div>
+          <label style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>
+            <input type="checkbox" style={{ width: 'auto' }} checked={day.is_superset}
+              onChange={(e) => onPatchDay(day.id, { is_superset: e.target.checked })} />
+            Superset (one set of each exercise per round)
+          </label>
           {day.exercises.map((ex) => (
             <div key={ex.id} style={{ display: 'flex', gap: 6, alignItems: 'flex-end', marginTop: 8, flexWrap: 'wrap' }}>
               <label style={{ display: 'flex', flexDirection: 'column', fontSize: 10, color: 'var(--muted)', flex: 1, minWidth: 120 }}>exercise

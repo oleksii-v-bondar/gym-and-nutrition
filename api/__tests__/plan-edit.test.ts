@@ -35,6 +35,26 @@ it('activates a plan, adds a day and exercise, edits and deletes', async () => {
   expect((await request(app).delete(`/api/plan-days/${day.body.id}`).set(H)).status).toBe(204);
 });
 
+it('toggles a day as a superset; it shows in the tree and day detail and is copied on fork', async () => {
+  const t = await auth('super@x.com');
+  const planId = await seedPlan(t);
+  const H = { Authorization: `Bearer ${t}` };
+  const tree0 = await request(app).get(`/api/plans/${planId}`).set(H);
+  const dayId = tree0.body.days[0].id;
+  expect(tree0.body.days[0].is_superset).toBe(false);
+
+  expect((await request(app).put(`/api/plan-days/${dayId}`).set(H).send({ is_superset: true })).status).toBe(200);
+
+  const tree1 = await request(app).get(`/api/plans/${planId}`).set(H);
+  expect(tree1.body.days[0].is_superset).toBe(true);
+  const detail = await request(app).get(`/api/plan-days/${dayId}`).set(H);
+  expect(detail.body.is_superset).toBe(true);
+
+  const forked = await request(app).post(`/api/plans/${planId}/fork`).set(H);
+  const forkTree = await request(app).get(`/api/plans/${forked.body.id}`).set(H);
+  expect(forkTree.body.days[0].is_superset).toBe(true);
+});
+
 it('blocks editing another user resource', async () => {
   const owner = await auth('owner@x.com');
   const planId = await seedPlan(owner);

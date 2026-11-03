@@ -9,6 +9,7 @@ export const exerciseImport = z.object({
 });
 export const dayImport = z.object({
   name: z.string().min(1),
+  is_superset: z.boolean().optional(),
   exercises: z.array(exerciseImport),
 });
 export const importSchema = z.object({
@@ -28,6 +29,7 @@ export const dayCreate = z.object({ name: z.string().min(1) });
 export const dayUpdate = z.object({
   name: z.string().min(1).optional(),
   order_index: z.number().int().nonnegative().optional(),
+  is_superset: z.boolean().optional(),
 });
 export const exerciseUpsert = z.object({
   exercise_name: z.string().min(1).optional(),

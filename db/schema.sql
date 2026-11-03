@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS plan_days (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   plan_id uuid NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
   name text NOT NULL,
-  order_index int NOT NULL DEFAULT 0
+  order_index int NOT NULL DEFAULT 0,
+  is_superset boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS day_exercises (

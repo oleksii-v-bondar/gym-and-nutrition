@@ -12,7 +12,7 @@ export async function createPlanFromImport(userId: string, data: PlanImport): Pr
     for (let d = 0; d < data.days.length; d++) {
       const day = data.days[d];
       const dayRow = await client.query<{ id: string }>(
-        'INSERT INTO plan_days (plan_id, name, order_index) VALUES ($1,$2,$3) RETURNING id', [planId, day.name, d]);
+        'INSERT INTO plan_days (plan_id, name, order_index, is_superset) VALUES ($1,$2,$3,$4) RETURNING id', [planId, day.name, d, day.is_superset ?? false]);
       const dayId = dayRow.rows[0].id;
       for (let e = 0; e < day.exercises.length; e++) {
         const ex = day.exercises[e];
@@ -61,7 +61,7 @@ export async function getPlanTree(userId: string, planId: string) {
      FROM plans WHERE id=$1 AND (user_id=$2 OR is_template=true) AND deleted_at IS NULL`, [planId, userId]);
   if (!plan.rows[0]) return null;
   const days = await query(
-    'SELECT id, name, order_index FROM plan_days WHERE plan_id=$1 ORDER BY order_index', [planId]);
+    'SELECT id, name, order_index, is_superset FROM plan_days WHERE plan_id=$1 ORDER BY order_index', [planId]);
   const exercises = await query(
     `SELECT de.id, de.plan_day_id, de.exercise_name, de.order_index, de.target_sets, de.target_reps, de.rest_seconds, de.starting_weight, de.extra_segments
      FROM day_exercises de JOIN plan_days pd ON pd.id = de.plan_day_id
@@ -116,10 +116,11 @@ export async function addDay(planId: string, name: string) {
      VALUES ($1,$2,(SELECT COALESCE(MAX(order_index)+1,0) FROM plan_days WHERE plan_id=$1)) RETURNING id`, [planId, name]);
   return r.rows[0];
 }
-export async function updateDay(dayId: string, fields: { name?: string; order_index?: number }) {
+export async function updateDay(dayId: string, fields: { name?: string; order_index?: number; is_superset?: boolean }) {
   const sets: string[] = []; const vals: unknown[] = [];
   if (fields.name !== undefined) { vals.push(fields.name); sets.push(`name=$${vals.length}`); }
   if (fields.order_index !== undefined) { vals.push(fields.order_index); sets.push(`order_index=$${vals.length}`); }
+  if (fields.is_superset !== undefined) { vals.push(fields.is_superset); sets.push(`is_superset=$${vals.length}`); }
   if (!sets.length) return;
   vals.push(dayId);
   await query(`UPDATE plan_days SET ${sets.join(',')} WHERE id=$${vals.length}`, vals);
@@ -155,12 +156,12 @@ export async function forkPlan(userId: string, planId: string) {
     const newPlanId = newPlan.rows[0].id;
     const dayIdMap: Record<string, string> = {};
     const exerciseIdMap: Record<string, string> = {};
-    const days = await client.query<{ id: string; name: string; order_index: number }>(
-      'SELECT id, name, order_index FROM plan_days WHERE plan_id=$1 ORDER BY order_index', [planId]);
+    const days = await client.query<{ id: string; name: string; order_index: number; is_superset: boolean }>(
+      'SELECT id, name, order_index, is_superset FROM plan_days WHERE plan_id=$1 ORDER BY order_index', [planId]);
     for (const d of days.rows) {
       const nd = await client.query<{ id: string }>(
-        'INSERT INTO plan_days (plan_id, name, order_index) VALUES ($1,$2,$3) RETURNING id',
-        [newPlanId, d.name, d.order_index]);
+        'INSERT INTO plan_days (plan_id, name, order_index, is_superset) VALUES ($1,$2,$3,$4) RETURNING id',
+        [newPlanId, d.name, d.order_index, d.is_superset]);
       dayIdMap[d.id] = nd.rows[0].id;
     }
     const exs = await client.query<any>(
@@ -185,7 +186,7 @@ export async function forkPlan(userId: string, planId: string) {
 }
 
 export async function getDayWithExercises(dayId: string) {
-  const day = await query<{ id: string; name: string }>('SELECT id, name FROM plan_days WHERE id=$1', [dayId]);
+  const day = await query<{ id: string; name: string; is_superset: boolean }>('SELECT id, name, is_superset FROM plan_days WHERE id=$1', [dayId]);
   if (!day.rows[0]) return null;
   const exercises = await query(
     `SELECT id, exercise_name, order_index, target_sets, target_reps, rest_seconds, starting_weight::float8 AS starting_weight, extra_segments
@@ -200,6 +201,7 @@ export async function exportPlan(userId: string, planId: string) {
     name: tree.name,
     days: tree.days.map((d: any) => ({
       name: d.name,
+      is_superset: d.is_superset,
       exercises: d.exercises.map((e: any) => ({
         exercise_name: e.exercise_name, target_sets: e.target_sets, target_reps: e.target_reps,
         rest_seconds: e.rest_seconds, starting_weight: e.starting_weight, extra_segments: e.extra_segments,

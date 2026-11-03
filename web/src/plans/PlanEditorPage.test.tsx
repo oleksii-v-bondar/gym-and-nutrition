@@ -120,6 +120,23 @@ it('edits a day name', async () => {
     expect.objectContaining({ method: 'PUT', body: expect.stringContaining('"name":"Pull"') })));
 });
 
+it('toggles a day as a superset', async () => {
+  const spy = vi.spyOn(client, 'apiFetch');
+  spy.mockImplementation(async (path: string, init?: RequestInit) => {
+    if (path === '/api/plans/p1') return {
+      id: 'p1', name: 'P', is_active: false, is_template: false, owned: true,
+      days: [{ id: 'd1', name: 'Push', order_index: 0, is_superset: false, exercises: [] }],
+    } as any;
+    if (path === '/api/plan-days/d1' && init?.method === 'PUT') return { id: 'd1' } as any;
+    return {} as any;
+  });
+  renderAt('p1');
+  const cb = await screen.findByRole('checkbox', { name: /superset/i });
+  await userEvent.click(cb);
+  await waitFor(() => expect(spy).toHaveBeenCalledWith('/api/plan-days/d1',
+    expect.objectContaining({ method: 'PUT', body: expect.stringContaining('"is_superset":true') })));
+});
+
 it('admin can copy a template into a personal plan', async () => {
   vi.spyOn(AuthCtx, 'useAuth').mockReturnValue({ isAuthed: true, isAdmin: true, login: vi.fn(), register: vi.fn(), logout: vi.fn() });
   const spy = vi.spyOn(client, 'apiFetch');
