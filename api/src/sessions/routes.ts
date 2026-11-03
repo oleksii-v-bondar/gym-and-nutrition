@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware.js';
 import { userOwnsPlanDay, userOwnsExercise } from '../plans/repo.js';
-import { startSession, logSet, finishSession, getSession, userOwnsSession } from './repo.js';
+import { startSession, logSet, finishSession, getSession, userOwnsSession, listUserSessions, deleteSession } from './repo.js';
 
 export const sessionsRouter = Router();
 sessionsRouter.use(requireAuth);
@@ -24,9 +24,19 @@ sessionsRouter.post('/', async (req, res) => {
   res.status(201).json(await startSession(req.userId!, p.data.plan_day_id));
 });
 
+sessionsRouter.get('/', async (req, res) => {
+  res.json(await listUserSessions(req.userId!));
+});
+
 sessionsRouter.get('/:id', async (req, res) => {
   if (!(await userOwnsSession(req.userId!, req.params.id))) { res.status(404).json({ error: 'not found' }); return; }
   res.json(await getSession(req.params.id));
+});
+
+sessionsRouter.delete('/:id', async (req, res) => {
+  if (!(await userOwnsSession(req.userId!, req.params.id))) { res.status(404).json({ error: 'not found' }); return; }
+  await deleteSession(req.params.id);
+  res.status(204).end();
 });
 
 sessionsRouter.post('/:id/sets', async (req, res) => {

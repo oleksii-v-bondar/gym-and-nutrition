@@ -24,12 +24,31 @@ export async function finishSession(sessionId: string) {
   return r.rows[0];
 }
 export async function getSession(sessionId: string) {
-  const s = await query('SELECT id, plan_day_id, started_at, finished_at FROM workout_sessions WHERE id=$1', [sessionId]);
+  const s = await query<any>(
+    `SELECT ws.id, ws.plan_day_id, ws.started_at, ws.finished_at, pd.name AS day_name
+     FROM workout_sessions ws LEFT JOIN plan_days pd ON pd.id = ws.plan_day_id
+     WHERE ws.id=$1`, [sessionId]);
   if (!s.rows[0]) return null;
   const sets = await query(
-    `SELECT id, day_exercise_id, set_number, weight_used::float8 AS weight_used, reps_done, effort, extra_segments, created_at
-     FROM set_logs WHERE session_id=$1 ORDER BY set_number`, [sessionId]);
+    `SELECT sl.id, sl.day_exercise_id, de.exercise_name, sl.set_number, sl.weight_used::float8 AS weight_used,
+            sl.reps_done, sl.effort, sl.extra_segments, sl.created_at
+     FROM set_logs sl LEFT JOIN day_exercises de ON de.id = sl.day_exercise_id
+     WHERE sl.session_id=$1 ORDER BY sl.set_number`, [sessionId]);
   return { ...s.rows[0], sets: sets.rows };
+}
+export async function listUserSessions(userId: string) {
+  const r = await query(
+    `SELECT ws.id, ws.finished_at, ws.plan_day_id, pd.name AS day_name, COUNT(sl.id)::int AS set_count
+     FROM workout_sessions ws
+     LEFT JOIN plan_days pd ON pd.id = ws.plan_day_id
+     LEFT JOIN set_logs sl ON sl.session_id = ws.id
+     WHERE ws.user_id=$1 AND ws.finished_at IS NOT NULL
+     GROUP BY ws.id, pd.name
+     ORDER BY ws.finished_at DESC`, [userId]);
+  return r.rows;
+}
+export async function deleteSession(sessionId: string): Promise<void> {
+  await query('DELETE FROM workout_sessions WHERE id=$1', [sessionId]);
 }
 export async function latestCompletedSessionSets(userId: string, dayExerciseId: string) {
   const r = await query<{ reps_done: number; effort: string; weight_used: number }>(
