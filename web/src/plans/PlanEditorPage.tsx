@@ -25,6 +25,7 @@ export function PlanEditorPage() {
   const addExercise = useMutation({ mutationFn: (dayId: string) => apiFetch(`/api/plan-days/${dayId}/exercises`, { method: 'POST', body: JSON.stringify({ exercise_name: 'New exercise', target_sets: 3, target_reps: 8 }) }), onSuccess: refresh });
   const delExercise = useMutation({ mutationFn: (id: string) => apiFetch(`/api/day-exercises/${id}`, { method: 'DELETE' }), onSuccess: refresh });
   const patchExercise = useMutation({ mutationFn: (p: { id: string; body: Partial<Exercise> }) => apiFetch(`/api/day-exercises/${p.id}`, { method: 'PUT', body: JSON.stringify(p.body) }), onSuccess: refresh });
+  const patchDay = useMutation({ mutationFn: (p: { id: string; name: string }) => apiFetch(`/api/plan-days/${p.id}`, { method: 'PUT', body: JSON.stringify({ name: p.name }) }), onSuccess: refresh });
   const setTemplate = useMutation({ mutationFn: (v: boolean) => apiFetch(`/api/plans/${planId}`, { method: 'PUT', body: JSON.stringify({ is_template: v }) }), onSuccess: refresh });
   const deletePlan = useMutation({ mutationFn: () => apiFetch(`/api/plans/${planId}`, { method: 'DELETE' }), onSuccess: () => nav('/') });
 
@@ -33,6 +34,12 @@ export function PlanEditorPage() {
     if (owned) { addDay.mutate(); return; }
     const f = await fork();
     await apiFetch(`/api/plans/${f.id}/days`, { method: 'POST', body: JSON.stringify({ name: 'New day' }) });
+    nav(`/plan/${f.id}`);
+  }
+  async function onPatchDay(dayId: string, name: string) {
+    if (owned) { patchDay.mutate({ id: dayId, name }); return; }
+    const f = await fork();
+    await apiFetch(`/api/plan-days/${f.dayIdMap[dayId]}`, { method: 'PUT', body: JSON.stringify({ name }) });
     nav(`/plan/${f.id}`);
   }
   async function onAddExercise(dayId: string) {
@@ -87,7 +94,8 @@ export function PlanEditorPage() {
       {plan.data.days.map((day) => (
         <div className="card" key={day.id}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
-            <strong>{day.name}</strong>
+            <input defaultValue={day.name} style={{ fontWeight: 700, flex: 1 }}
+              onBlur={(e) => { if (e.target.value !== day.name) onPatchDay(day.id, e.target.value); }} />
             <button className="big-tap" onClick={() => onStartSession(day.id)}>Start session</button>
           </div>
           {day.exercises.map((ex) => (
