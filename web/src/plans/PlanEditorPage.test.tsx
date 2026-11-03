@@ -83,3 +83,19 @@ it('edits an exercise extra_segments count', async () => {
   await waitFor(() => expect(spy).toHaveBeenCalledWith('/api/day-exercises/e1',
     expect.objectContaining({ method: 'PUT', body: expect.stringContaining('"extra_segments":3') })));
 });
+
+it('deletes the plan when confirmed', async () => {
+  vi.spyOn(window, 'confirm').mockReturnValue(true);
+  const spy = vi.spyOn(client, 'apiFetch');
+  spy.mockImplementation(async (path: string, init?: RequestInit) => {
+    if (path === '/api/plans/p1' && init?.method === 'DELETE') return undefined as any;
+    if (path === '/api/plans/p1') return {
+      id: 'p1', name: 'P', is_active: false, is_template: false, owned: true, days: [],
+    } as any;
+    return {} as any;
+  });
+  renderAt('p1');
+  await screen.findByText('P');
+  await userEvent.click(screen.getByRole('button', { name: /delete plan/i }));
+  await waitFor(() => expect(spy).toHaveBeenCalledWith('/api/plans/p1', expect.objectContaining({ method: 'DELETE' })));
+});

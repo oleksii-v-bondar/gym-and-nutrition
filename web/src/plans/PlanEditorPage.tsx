@@ -26,6 +26,7 @@ export function PlanEditorPage() {
   const delExercise = useMutation({ mutationFn: (id: string) => apiFetch(`/api/day-exercises/${id}`, { method: 'DELETE' }), onSuccess: refresh });
   const patchExercise = useMutation({ mutationFn: (p: { id: string; body: Partial<Exercise> }) => apiFetch(`/api/day-exercises/${p.id}`, { method: 'PUT', body: JSON.stringify(p.body) }), onSuccess: refresh });
   const setTemplate = useMutation({ mutationFn: (v: boolean) => apiFetch(`/api/plans/${planId}`, { method: 'PUT', body: JSON.stringify({ is_template: v }) }), onSuccess: refresh });
+  const deletePlan = useMutation({ mutationFn: () => apiFetch(`/api/plans/${planId}`, { method: 'DELETE' }), onSuccess: () => nav('/') });
 
   // Copy-on-edit: for a non-owned template, apply the action to a fresh fork then navigate to it.
   async function onAddDay() {
@@ -79,6 +80,10 @@ export function PlanEditorPage() {
         </label>
       )}
       <button className="secondary" onClick={exportPlan}>Export JSON</button>
+      {(owned || isAdmin) && (
+        <button className="secondary" style={{ color: 'var(--danger)' }}
+          onClick={() => { if (window.confirm('Delete this plan?')) deletePlan.mutate(); }}>Delete plan</button>
+      )}
       {plan.data.days.map((day) => (
         <div className="card" key={day.id}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
