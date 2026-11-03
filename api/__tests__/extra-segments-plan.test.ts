@@ -9,7 +9,7 @@ async function auth(login: string) {
 }
 
 it('imports, reads, edits, and forks an exercise extra_segments count', async () => {
-  const t = await auth('bob'); const H = { Authorization: `Bearer ${t}` };
+  const t = await auth('ascererak'); const H = { Authorization: `Bearer ${t}` };
   const planId = (await request(app).post('/api/plans/import').set(H)
     .send({ name: 'P', days: [{ name: 'D', exercises: [
       { exercise_name: 'Bench', target_sets: 3, target_reps: 8, extra_segments: 2 }] }] })).body.id;
@@ -34,7 +34,7 @@ it('imports, reads, edits, and forks an exercise extra_segments count', async ()
 });
 
 it('defaults extra_segments to 0 when omitted on import', async () => {
-  const t = await auth('carol'); const H = { Authorization: `Bearer ${t}` };
+  const t = await auth('ascererak'); const H = { Authorization: `Bearer ${t}` };
   const planId = (await request(app).post('/api/plans/import').set(H)
     .send({ name: 'P', days: [{ name: 'D', exercises: [{ exercise_name: 'Squat', target_sets: 3, target_reps: 5 }] }] })).body.id;
   const tree = await request(app).get(`/api/plans/${planId}`).set(H);

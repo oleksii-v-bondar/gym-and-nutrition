@@ -26,6 +26,8 @@ it('badges templates and creates a plan', async () => {
   renderPage();
   expect(await screen.findByText('Shared')).toBeInTheDocument();
   expect(screen.getByText(/template/i)).toBeInTheDocument();
+  // import is admin-only; a non-admin should not see it
+  expect(screen.queryByRole('button', { name: /import/i })).toBeNull();
 
   await userEvent.type(screen.getByPlaceholderText(/new plan name/i), 'Legs');
   await userEvent.click(screen.getByRole('button', { name: /create plan/i }));

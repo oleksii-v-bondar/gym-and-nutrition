@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../api/client';
+import { useAuth } from '../auth/AuthContext';
 import { readPlanFile } from './importPlan';
 import { NavBar } from '../ui/NavBar';
 
@@ -9,6 +10,7 @@ interface PlanRow { id: string; name: string; is_active: boolean; is_template: b
 export function PlansPage() {
   const qc = useQueryClient();
   const nav = useNavigate();
+  const { isAdmin } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
   const [newName, setNewName] = useState('');
   const plans = useQuery({ queryKey: ['plans'], queryFn: () => apiFetch<PlanRow[]>('/api/plans') });
@@ -33,7 +35,9 @@ export function PlansPage() {
         <input placeholder="New plan name" value={newName} onChange={(e) => setNewName(e.target.value)} />
         <button onClick={() => { if (newName.trim()) createMut.mutate(newName.trim()); }}>Create plan</button>
         <input ref={fileRef} type="file" accept="application/json" onChange={onFile} hidden />
-        <button className="secondary" style={{ marginTop: 8 }} onClick={() => fileRef.current?.click()}>Import plan (JSON)</button>
+        {isAdmin && (
+          <button className="secondary" style={{ marginTop: 8 }} onClick={() => fileRef.current?.click()}>Import plan (JSON)</button>
+        )}
         {importMut.isError && <p style={{ color: 'var(--danger)' }}>Import failed (check the file schema).</p>}
       </div>
       {plans.isLoading && <p>Loading…</p>}

@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { createApp } from '../src/app.js';
-import { setupTestDb, resetDb, teardownTestDb } from '../src/test/helpers.js';
+import { setupTestDb, resetDb, teardownTestDb, buildPlan } from '../src/test/helpers.js';
 const app = createApp();
 beforeAll(setupTestDb);
 beforeEach(resetDb);
@@ -11,8 +11,9 @@ async function auth(email: string) {
   return (await request(app).post('/api/auth/login').send({ login: email, password: 'pw123456' })).body.accessToken as string;
 }
 async function seedPlan(token: string) {
-  return (await request(app).post('/api/plans/import').set('Authorization', `Bearer ${token}`)
-    .send({ name: 'P', days: [{ name: 'Day', exercises: [{ exercise_name: 'Squat', target_sets: 3, target_reps: 5 }] }] })).body.id;
+  const { planId } = await buildPlan(app, token, { dayName: 'Day',
+    exercises: [{ exercise_name: 'Squat', target_sets: 3, target_reps: 5 }] });
+  return planId;
 }
 
 it('activates a plan, adds a day and exercise, edits and deletes', async () => {

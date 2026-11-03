@@ -36,8 +36,7 @@ it('forks a template into the users account with id maps; editing the fork leave
 
 it('404 when forking a plan that is neither owned nor a template', async () => {
   const ownerT = await auth('owner'); const OH = { Authorization: `Bearer ${ownerT}` };
-  const planId = (await request(app).post('/api/plans/import').set(OH)
-    .send({ name: 'P', days: [] })).body.id;
+  const planId = (await request(app).post('/api/plans').set(OH).send({ name: 'P' })).body.id;
   const other = await auth('intruder');
   const res = await request(app).post(`/api/plans/${planId}/fork`).set({ Authorization: `Bearer ${other}` });
   expect(res.status).toBe(404);

@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { createApp } from '../src/app.js';
-import { setupTestDb, resetDb, teardownTestDb } from '../src/test/helpers.js';
+import { setupTestDb, resetDb, teardownTestDb, buildPlan } from '../src/test/helpers.js';
 const app = createApp();
 beforeAll(setupTestDb); beforeEach(resetDb); afterAll(teardownTestDb);
 async function auth(email: string) {
@@ -8,10 +8,9 @@ async function auth(email: string) {
   return (await request(app).post('/api/auth/login').send({ login: email, password: 'pw123456' })).body.accessToken as string;
 }
 async function seed(token: string) {
-  const plan = await request(app).post('/api/plans/import').set('Authorization', `Bearer ${token}`)
-    .send({ name: 'P', days: [{ name: 'D', exercises: [{ exercise_name: 'Bench', target_sets: 3, target_reps: 8, starting_weight: 40 }] }] });
-  const tree = await request(app).get(`/api/plans/${plan.body.id}`).set('Authorization', `Bearer ${token}`);
-  return { dayId: tree.body.days[0].id, exId: tree.body.days[0].exercises[0].id };
+  const { dayId, exId } = await buildPlan(app, token, {
+    exercises: [{ exercise_name: 'Bench', target_sets: 3, target_reps: 8, starting_weight: 40 }] });
+  return { dayId, exId };
 }
 
 it('runs a full session: start, log sets, finish, read back', async () => {

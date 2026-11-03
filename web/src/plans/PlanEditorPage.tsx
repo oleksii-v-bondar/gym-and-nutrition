@@ -86,7 +86,7 @@ export function PlanEditorPage() {
           Shared template (visible to all users)
         </label>
       )}
-      <button className="secondary" onClick={exportPlan}>Export JSON</button>
+      {isAdmin && <button className="secondary" onClick={exportPlan}>Export JSON</button>}
       {(owned || isAdmin) && (
         <button className="secondary" style={{ color: 'var(--danger)' }}
           onClick={() => { if (window.confirm('Delete this plan?')) deletePlan.mutate(); }}>Delete plan</button>

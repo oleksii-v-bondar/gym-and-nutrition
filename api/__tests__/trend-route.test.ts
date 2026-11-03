@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { createApp } from '../src/app.js';
-import { setupTestDb, resetDb, teardownTestDb } from '../src/test/helpers.js';
+import { setupTestDb, resetDb, teardownTestDb, buildPlan } from '../src/test/helpers.js';
 const app = createApp();
 beforeAll(setupTestDb); beforeEach(resetDb); afterAll(teardownTestDb);
 async function auth(email: string) {
@@ -10,10 +10,8 @@ async function auth(email: string) {
 
 it('reports progressing across three rising sessions', async () => {
   const t = await auth('tr@x.com'); const H = { Authorization: `Bearer ${t}` };
-  const plan = await request(app).post('/api/plans/import').set(H)
-    .send({ name: 'P', days: [{ name: 'D', exercises: [{ exercise_name: 'Bench', target_sets: 1, target_reps: 8 }] }] });
-  const tree = await request(app).get(`/api/plans/${plan.body.id}`).set(H);
-  const dayId = tree.body.days[0].id; const exId = tree.body.days[0].exercises[0].id;
+  const { dayId, exId } = await buildPlan(app, t, {
+    exercises: [{ exercise_name: 'Bench', target_sets: 1, target_reps: 8 }] });
   for (const w of [40, 42.5, 45]) {
     const s = await request(app).post('/api/sessions').set(H).send({ plan_day_id: dayId });
     await request(app).post(`/api/sessions/${s.body.id}/sets`).set(H)

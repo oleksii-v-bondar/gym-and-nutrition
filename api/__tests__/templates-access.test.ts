@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { createApp } from '../src/app.js';
-import { setupTestDb, resetDb, teardownTestDb } from '../src/test/helpers.js';
+import { setupTestDb, resetDb, teardownTestDb, buildPlan } from '../src/test/helpers.js';
 const app = createApp();
 beforeAll(setupTestDb); beforeEach(resetDb); afterAll(teardownTestDb);
 async function auth(login: string) {
@@ -8,8 +8,10 @@ async function auth(login: string) {
   return (await request(app).post('/api/auth/login').send({ login, password: 'pw123456' })).body.accessToken as string;
 }
 async function makePlan(H: Record<string,string>) {
-  return (await request(app).post('/api/plans/import').set(H)
-    .send({ name: 'Tmpl', days: [{ name: 'D', exercises: [{ exercise_name: 'Bench', target_sets: 3, target_reps: 8 }] }] })).body.id;
+  const token = H.Authorization.slice('Bearer '.length);
+  const { planId } = await buildPlan(app, token, { name: 'Tmpl', dayName: 'D',
+    exercises: [{ exercise_name: 'Bench', target_sets: 3, target_reps: 8 }] });
+  return planId;
 }
 
 it('admin can mark a plan as a template; others then see it as a non-owned template', async () => {

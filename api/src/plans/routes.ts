@@ -36,6 +36,7 @@ plansRouter.delete('/:id', async (req, res) => {
 });
 
 plansRouter.post('/import', async (req, res) => {
+  if (!(await isAdminUser(req.userId!))) { res.status(403).json({ error: 'admin only' }); return; }
   const parsed = importSchema.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: 'invalid plan', details: parsed.error.issues }); return; }
   const created = await createPlanFromImport(req.userId!, parsed.data);
@@ -49,6 +50,7 @@ plansRouter.get('/:id', async (req, res) => {
 });
 
 plansRouter.get('/:id/export', async (req, res) => {
+  if (!(await isAdminUser(req.userId!))) { res.status(403).json({ error: 'admin only' }); return; }
   const data = await exportPlan(req.userId!, req.params.id);
   if (!data) { res.status(404).json({ error: 'not found' }); return; }
   res.json(data);

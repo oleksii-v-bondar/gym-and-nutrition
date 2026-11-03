@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { createApp } from '../src/app.js';
-import { setupTestDb, resetDb, teardownTestDb } from '../src/test/helpers.js';
+import { setupTestDb, resetDb, teardownTestDb, buildPlan } from '../src/test/helpers.js';
 const app = createApp();
 beforeAll(setupTestDb); beforeEach(resetDb); afterAll(teardownTestDb);
 async function auth(email: string) {
@@ -10,11 +10,8 @@ async function auth(email: string) {
 
 it('suggests starting weight when there is no history, then bumps after an easy session', async () => {
   const t = await auth('sg@x.com'); const H = { Authorization: `Bearer ${t}` };
-  const plan = await request(app).post('/api/plans/import').set(H)
-    .send({ name: 'P', days: [{ name: 'D', exercises: [{ exercise_name: 'Bench', target_sets: 2, target_reps: 8, starting_weight: 40 }] }] });
-  const tree = await request(app).get(`/api/plans/${plan.body.id}`).set(H);
-  const exId = tree.body.days[0].exercises[0].id;
-  const dayId = tree.body.days[0].id;
+  const { dayId, exId } = await buildPlan(app, t, {
+    exercises: [{ exercise_name: 'Bench', target_sets: 2, target_reps: 8, starting_weight: 40 }] });
 
   const first = await request(app).get(`/api/exercises/${exId}/suggestion`).set(H);
   expect(first.body).toEqual({ weight: 40, reason: expect.stringContaining('Starting') });
