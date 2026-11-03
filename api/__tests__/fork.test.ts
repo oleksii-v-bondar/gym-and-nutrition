@@ -26,6 +26,7 @@ it('forks a template into the users account with id maps; editing the fork leave
 
   const copy = await request(app).get(`/api/plans/${fork.body.id}`).set(UH);
   expect(copy.body).toMatchObject({ is_template: false, owned: true });
+  expect(copy.body.name).toBe('T (My Personal)');
   expect(copy.body.days[0].exercises[0].exercise_name).toBe('Bench');
 
   await request(app).delete(`/api/day-exercises/${fork.body.exerciseIdMap[srcExId]}`).set(UH);

@@ -151,7 +151,7 @@ export async function forkPlan(userId: string, planId: string) {
     if (!src.rows[0]) { await client.query('ROLLBACK'); return null; }
     const newPlan = await client.query<{ id: string }>(
       'INSERT INTO plans (user_id, name, is_active, is_template) VALUES ($1,$2,false,false) RETURNING id',
-      [userId, src.rows[0].name]);
+      [userId, `${src.rows[0].name} (My Personal)`]);
     const newPlanId = newPlan.rows[0].id;
     const dayIdMap: Record<string, string> = {};
     const exerciseIdMap: Record<string, string> = {};
