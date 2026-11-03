@@ -28,43 +28,38 @@ export function PlanEditorPage() {
   const patchDay = useMutation({ mutationFn: (p: { id: string; body: Partial<Day> }) => apiFetch(`/api/plan-days/${p.id}`, { method: 'PUT', body: JSON.stringify(p.body) }), onSuccess: refresh });
   const setTemplate = useMutation({ mutationFn: (v: boolean) => apiFetch(`/api/plans/${planId}`, { method: 'PUT', body: JSON.stringify({ is_template: v }) }), onSuccess: refresh });
   const deletePlan = useMutation({ mutationFn: () => apiFetch(`/api/plans/${planId}`, { method: 'DELETE' }), onSuccess: () => nav('/') });
-  const copyFromTemplate = useMutation({ mutationFn: () => fork(), onSuccess: (f) => nav(`/plan/${f.id}`) });
+  const copyFromTemplate = useMutation({ mutationFn: () => fork(), onSuccess: (f) => nav(`/plan/${f.id}/edit`) });
 
   // Copy-on-edit: for a non-owned template, apply the action to a fresh fork then navigate to it.
   async function onAddDay() {
     if (owned) { addDay.mutate(); return; }
     const f = await fork();
     await apiFetch(`/api/plans/${f.id}/days`, { method: 'POST', body: JSON.stringify({ name: 'New day' }) });
-    nav(`/plan/${f.id}`);
+    nav(`/plan/${f.id}/edit`);
   }
   async function onPatchDay(dayId: string, body: Partial<Day>) {
     if (owned) { patchDay.mutate({ id: dayId, body }); return; }
     const f = await fork();
     await apiFetch(`/api/plan-days/${f.dayIdMap[dayId]}`, { method: 'PUT', body: JSON.stringify(body) });
-    nav(`/plan/${f.id}`);
+    nav(`/plan/${f.id}/edit`);
   }
   async function onAddExercise(dayId: string) {
     if (owned) { addExercise.mutate(dayId); return; }
     const f = await fork();
     await apiFetch(`/api/plan-days/${f.dayIdMap[dayId]}/exercises`, { method: 'POST', body: JSON.stringify({ exercise_name: 'New exercise', target_sets: 3, target_reps: 8 }) });
-    nav(`/plan/${f.id}`);
+    nav(`/plan/${f.id}/edit`);
   }
   async function onDelExercise(exId: string) {
     if (owned) { delExercise.mutate(exId); return; }
     const f = await fork();
     await apiFetch(`/api/day-exercises/${f.exerciseIdMap[exId]}`, { method: 'DELETE' });
-    nav(`/plan/${f.id}`);
+    nav(`/plan/${f.id}/edit`);
   }
   async function onPatchExercise(exId: string, body: Partial<Exercise>) {
     if (owned) { patchExercise.mutate({ id: exId, body }); return; }
     const f = await fork();
     await apiFetch(`/api/day-exercises/${f.exerciseIdMap[exId]}`, { method: 'PUT', body: JSON.stringify(body) });
-    nav(`/plan/${f.id}`);
-  }
-  async function onStartSession(dayId: string) {
-    if (owned) { nav(`/session/${dayId}`); return; }
-    const f = await fork();
-    nav(`/session/${f.dayIdMap[dayId]}`);
+    nav(`/plan/${f.id}/edit`);
   }
 
   async function exportPlan() {
@@ -78,7 +73,10 @@ export function PlanEditorPage() {
   return (
     <div className="app">
       <NavBar />
-      <h1>{plan.data.name}</h1>
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1 style={{ flex: 1, minWidth: 0 }}>{plan.data.name}</h1>
+        <Link to={`/plan/${planId}`}><button className="secondary" style={{ width: 'auto' }}>View plan</button></Link>
+      </div>
       {!owned && <p className="card" style={{ color: 'var(--muted)' }}>This is a shared template — editing will make your own copy.</p>}
       {isAdmin && owned && (
         <label className="card" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -97,11 +95,8 @@ export function PlanEditorPage() {
       )}
       {plan.data.days.map((day) => (
         <div className="card" key={day.id}>
-          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-            <input defaultValue={day.name} style={{ fontWeight: 700, flex: 1, minWidth: 0 }}
-              onBlur={(e) => { if (e.target.value !== day.name) onPatchDay(day.id, { name: e.target.value }); }} />
-            <button className="big-tap" style={{ width: 'auto', flex: '0 0 auto' }} onClick={() => onStartSession(day.id)}>Start session</button>
-          </div>
+          <input defaultValue={day.name} style={{ fontWeight: 700, width: '100%' }}
+            onBlur={(e) => { if (e.target.value !== day.name) onPatchDay(day.id, { name: e.target.value }); }} />
           <label style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>
             <input type="checkbox" style={{ width: 'auto' }} checked={day.is_superset}
               onChange={(e) => onPatchDay(day.id, { is_superset: e.target.checked })} />

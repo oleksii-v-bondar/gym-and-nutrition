@@ -14,8 +14,8 @@ function renderAt(id: string) {
   return render(
     <QueryClientProvider client={qc}>
       <AuthProvider>
-        <MemoryRouter initialEntries={[`/plan/${id}`]}>
-          <Routes><Route path="/plan/:planId" element={<PlanEditorPage />} /></Routes>
+        <MemoryRouter initialEntries={[`/plan/${id}/edit`]}>
+          <Routes><Route path="/plan/:planId/edit" element={<PlanEditorPage />} /></Routes>
         </MemoryRouter>
       </AuthProvider>
     </QueryClientProvider>

@@ -15,7 +15,7 @@ export function CreatePlanPage() {
   const createMut = useMutation({
     mutationFn: (n: string) =>
       apiFetch<{ id: string }>('/api/plans', { method: 'POST', body: JSON.stringify({ name: n }) }),
-    onSuccess: (r) => nav(`/plan/${r.id}`),
+    onSuccess: (r) => nav(`/plan/${r.id}/edit`),
   });
   const importMut = useMutation({
     mutationFn: async (data: unknown) => apiFetch('/api/plans/import', { method: 'POST', body: JSON.stringify(data) }),
