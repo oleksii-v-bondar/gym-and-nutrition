@@ -5,6 +5,7 @@ import { LoginPage } from './auth/LoginPage';
 import { RegisterPage } from './auth/RegisterPage';
 import { RequireAuth } from './ui/RequireAuth';
 import { PlansPage } from './plans/PlansPage';
+import { CreatePlanPage } from './plans/CreatePlanPage';
 import { PlanEditorPage } from './plans/PlanEditorPage';
 import { SessionPage } from './session/SessionPage';
 import { ProgressPage } from './progress/ProgressPage';
@@ -21,6 +22,7 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/" element={<RequireAuth><PlansPage /></RequireAuth>} />
+            <Route path="/plans/new" element={<RequireAuth><CreatePlanPage /></RequireAuth>} />
             <Route path="/plan/:planId" element={<RequireAuth><PlanEditorPage /></RequireAuth>} />
             <Route path="/session/:dayId" element={<RequireAuth><SessionPage /></RequireAuth>} />
             <Route path="/progress/:exId" element={<RequireAuth><ProgressPage /></RequireAuth>} />

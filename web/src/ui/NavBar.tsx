@@ -8,6 +8,7 @@ export function NavBar() {
   const items = () => (
     <>
       <Link to="/" onClick={close}><button className="secondary">Plans</button></Link>
+      <Link to="/plans/new" onClick={close}><button className="secondary">Create plan</button></Link>
       <Link to="/history" onClick={close}><button className="secondary">History</button></Link>
       <button className="secondary" onClick={() => { close(); logout(); }}>Log out</button>
     </>

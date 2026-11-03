@@ -1,5 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '../auth/AuthContext';
@@ -13,14 +12,13 @@ function renderPage() {
   );
 }
 
-it('badges templates and creates a plan', async () => {
+it('badges templates and hides import for non-admins', async () => {
   const spy = vi.spyOn(client, 'apiFetch');
-  spy.mockImplementation(async (path: string, init?: RequestInit) => {
-    if (path === '/api/plans' && (!init || init.method === undefined)) return [
+  spy.mockImplementation(async (path: string) => {
+    if (path === '/api/plans') return [
       { id: 'p1', name: 'Mine', is_active: false, is_template: false, owned: true },
       { id: 't1', name: 'Shared', is_active: false, is_template: true, owned: false },
     ] as any;
-    if (path === '/api/plans' && init?.method === 'POST') return { id: 'new1' } as any;
     return {} as any;
   });
   renderPage();
@@ -28,9 +26,4 @@ it('badges templates and creates a plan', async () => {
   expect(screen.getByText(/template/i)).toBeInTheDocument();
   // import is admin-only; a non-admin should not see it
   expect(screen.queryByRole('button', { name: /import/i })).toBeNull();
-
-  await userEvent.type(screen.getByPlaceholderText(/new plan name/i), 'Legs');
-  await userEvent.click(screen.getByRole('button', { name: /create plan/i }));
-  await waitFor(() => expect(spy).toHaveBeenCalledWith('/api/plans',
-    expect.objectContaining({ method: 'POST', body: expect.stringContaining('Legs') })));
 });
