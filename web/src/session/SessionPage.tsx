@@ -71,7 +71,7 @@ export function SessionPage() {
           <p style={{ color: 'var(--muted)' }}>Exercise {idx + 1}/{day.data.exercises.length}</p>
           {suggestion.isLoading ? <p>Loading suggestion…</p> : (
             <ExerciseLogger
-              key={exercise.id + ':' + setNumber}
+              key={exercise.id}
               exerciseName={exercise.exercise_name}
               targetReps={exercise.target_reps}
               targetSets={exercise.target_sets}

@@ -39,3 +39,26 @@ it('starts a session and logs a set with the chosen effort', async () => {
   await waitFor(() => expect(spy).toHaveBeenCalledWith('/api/sessions/s1/sets',
     expect.objectContaining({ method: 'POST', body: expect.stringContaining('"effort":"easy"') })));
 });
+
+it('keeps the entered weight/reps for the next set of the same exercise', async () => {
+  const spy = vi.spyOn(client, 'apiFetch');
+  spy.mockImplementation(async (path: string, init?: RequestInit) => {
+    if (path === '/api/plan-days/d1') return { id: 'd1', name: 'Push', exercises: [
+      { id: 'e1', exercise_name: 'Bench', order_index: 0, target_sets: 2, target_reps: 8, rest_seconds: null, starting_weight: 40, extra_segments: 0 },
+    ] } as any;
+    if (path === '/api/sessions' && init?.method === 'POST') return { id: 's1', started_at: 'now' } as any;
+    if (path === '/api/exercises/e1/suggestion') return { weight: 60, reason: 'x' } as any;
+    if (path === '/api/sessions/s1/sets' && init?.method === 'POST') return { id: 'set1' } as any;
+    return {} as any;
+  });
+  renderAt('d1');
+  await screen.findByText('Bench');
+  // set 1: change the weight to 55, then log
+  const inputs = screen.getAllByRole('spinbutton'); // [weight, reps]
+  await userEvent.clear(inputs[0]);
+  await userEvent.type(inputs[0], '55');
+  await userEvent.click(screen.getByRole('button', { name: 'ok' }));
+  // set 2 of the same exercise should retain 55 (not reset to the suggested 60)
+  await waitFor(() => expect(screen.getByText(/set 2\/2/i)).toBeInTheDocument());
+  expect(screen.getAllByRole('spinbutton')[0]).toHaveValue(55);
+});
