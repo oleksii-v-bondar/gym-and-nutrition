@@ -62,3 +62,13 @@ export async function latestCompletedSessionSets(userId: string, dayExerciseId: 
      ORDER BY sl.set_number`, [dayExerciseId, userId]);
   return r.rows;
 }
+export async function updateSet(sessionId: string, setId: string, s: {
+  weight_used: number; reps_done: number; effort: string;
+  extra_segments: Array<{ weight: number; reps: number }>;
+}): Promise<{ id: string } | null> {
+  const r = await query<{ id: string }>(
+    `UPDATE set_logs SET weight_used=$3, reps_done=$4, effort=$5, extra_segments=$6::jsonb
+     WHERE id=$2 AND session_id=$1 RETURNING id`,
+    [sessionId, setId, s.weight_used, s.reps_done, s.effort, JSON.stringify(s.extra_segments)]);
+  return r.rows[0] ?? null;
+}

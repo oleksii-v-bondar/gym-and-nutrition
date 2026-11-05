@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware.js';
 import { userOwnsPlanDay, userOwnsExercise } from '../plans/repo.js';
-import { startSession, logSet, finishSession, getSession, userOwnsSession, listUserSessions, deleteSession } from './repo.js';
+import { startSession, logSet, finishSession, getSession, userOwnsSession, listUserSessions, deleteSession, updateSet } from './repo.js';
 
 export const sessionsRouter = Router();
 sessionsRouter.use(requireAuth);
@@ -15,6 +15,12 @@ const setBody = z.object({
   reps_done: z.number().int().nonnegative(),
   effort: z.enum(['easy', 'ok', 'hard', 'failed']),
   extra_segments: z.array(z.object({ weight: z.number().nonnegative(), reps: z.number().int().nonnegative() })).optional(),
+});
+const patchSetBody = z.object({
+  weight_used: z.number().nonnegative(),
+  reps_done: z.number().int().nonnegative(),
+  effort: z.enum(['easy', 'ok', 'hard', 'failed']),
+  extra_segments: z.array(z.object({ weight: z.number().nonnegative(), reps: z.number().int().nonnegative() })),
 });
 
 sessionsRouter.post('/', async (req, res) => {
@@ -45,6 +51,15 @@ sessionsRouter.post('/:id/sets', async (req, res) => {
   if (!p.success) { res.status(400).json({ error: 'invalid' }); return; }
   if (!(await userOwnsExercise(req.userId!, p.data.day_exercise_id))) { res.status(404).json({ error: 'not found' }); return; }
   res.status(201).json(await logSet(req.params.id, p.data));
+});
+
+sessionsRouter.patch('/:id/sets/:setId', async (req, res) => {
+  if (!(await userOwnsSession(req.userId!, req.params.id))) { res.status(404).json({ error: 'not found' }); return; }
+  const p = patchSetBody.safeParse(req.body);
+  if (!p.success) { res.status(400).json({ error: 'invalid' }); return; }
+  const updated = await updateSet(req.params.id, req.params.setId, p.data);
+  if (!updated) { res.status(404).json({ error: 'not found' }); return; }
+  res.json(updated);
 });
 
 sessionsRouter.post('/:id/finish', async (req, res) => {
