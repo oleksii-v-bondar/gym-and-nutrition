@@ -23,3 +23,6 @@ a:hover { color:#93c5fd; }
   .nav-burger { display:none; }
 }
 @media (min-width: 640px) { .app { max-width: 720px; } }
+input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
