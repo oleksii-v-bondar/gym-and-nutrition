@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -20,9 +20,12 @@ export function SessionEditPage() {
   const session = useQuery({ queryKey: ['session', id], queryFn: () => apiFetch<SessionDetail>(`/api/sessions/${id}`) });
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const seededRef = useRef(false);
 
   useEffect(() => {
-    if (!session.data) return;
+    if (!session.data || seededRef.current) return;
+    seededRef.current = true;
     const d: Record<string, Draft> = {};
     for (const s of session.data.sets) {
       d[s.id] = {
@@ -54,20 +57,26 @@ export function SessionEditPage() {
   async function save() {
     if (!session.data) return;
     setSaving(true);
-    for (const s of session.data.sets) {
-      const d = drafts[s.id];
-      if (!d) continue;
-      await apiFetch(`/api/sessions/${id}/sets/${s.id}`, { method: 'PATCH', body: JSON.stringify({
-        weight_used: Number(d.weight), reps_done: Number(d.reps), effort: d.effort,
-        extra_segments: d.segments
-          .filter((x) => x.weight !== '' && x.reps !== '')
-          .map((x) => ({ weight: Number(x.weight), reps: Number(x.reps) })),
-      }) });
+    setError('');
+    try {
+      for (const s of session.data.sets) {
+        const d = drafts[s.id];
+        if (!d) continue;
+        await apiFetch(`/api/sessions/${id}/sets/${s.id}`, { method: 'PATCH', body: JSON.stringify({
+          weight_used: Number(d.weight), reps_done: Number(d.reps), effort: d.effort,
+          extra_segments: d.segments
+            .filter((x) => x.weight !== '' && x.reps !== '')
+            .map((x) => ({ weight: Number(x.weight), reps: Number(x.reps) })),
+        }) });
+      }
+      await qc.invalidateQueries({ queryKey: ['session', id] });
+      await qc.invalidateQueries({ queryKey: ['sessions'] });
+      nav(`/history/${id}`);
+    } catch {
+      setError('Could not save changes. Please try again.');
+    } finally {
+      setSaving(false);
     }
-    await qc.invalidateQueries({ queryKey: ['session', id] });
-    await qc.invalidateQueries({ queryKey: ['sessions'] });
-    setSaving(false);
-    nav(`/history/${id}`);
   }
 
   if (session.isLoading) return <div className="app"><NavBar />Loading…</div>;
@@ -113,6 +122,7 @@ export function SessionEditPage() {
           })}
         </div>
       ))}
+      {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
       <button onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
       <button className="secondary" onClick={() => nav(`/history/${id}`)}>Cancel</button>
     </div>
