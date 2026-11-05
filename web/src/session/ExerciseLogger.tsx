@@ -75,7 +75,7 @@ export function ExerciseLogger(props: Props) {
           <input type="number" inputMode="numeric" placeholder="reps completed"
             value={failedReps} onChange={(e) => setFailedReps(e.target.value)} />
           <div className="row" style={{ marginTop: 8 }}>
-            <button className="big-tap" onClick={() => { setPendingFail(false); doLog('failed', failedReps); }}>Confirm</button>
+            <button className="big-tap" disabled={failedReps.trim() === ''} onClick={() => { setPendingFail(false); doLog('failed', failedReps); }}>Confirm</button>
             <button className="secondary" style={{ width: 'auto' }} onClick={() => setPendingFail(false)}>Cancel</button>
           </div>
         </div>

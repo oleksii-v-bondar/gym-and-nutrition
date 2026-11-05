@@ -56,6 +56,11 @@ export function SessionEditPage() {
 
   async function save() {
     if (!session.data) return;
+    const invalid = session.data.sets.some((s) => {
+      const d = drafts[s.id];
+      return !d || d.weight.trim() === '' || d.reps.trim() === '';
+    });
+    if (invalid) { setError('Weight and reps are required for every set.'); return; }
     setSaving(true);
     setError('');
     try {
@@ -73,7 +78,9 @@ export function SessionEditPage() {
       await qc.invalidateQueries({ queryKey: ['sessions'] });
       nav(`/history/${id}`);
     } catch {
-      setError('Could not save changes. Please try again.');
+      await qc.invalidateQueries({ queryKey: ['session', id] });
+      await qc.invalidateQueries({ queryKey: ['sessions'] });
+      setError('Some changes may not have been saved. Please review and try again.');
     } finally {
       setSaving(false);
     }

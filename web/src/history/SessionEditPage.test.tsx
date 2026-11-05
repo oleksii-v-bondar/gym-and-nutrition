@@ -58,6 +58,33 @@ it('shows an error and re-enables Save when a PATCH rejects', async () => {
   await screen.findByDisplayValue('8');
   await userEvent.click(screen.getByRole('button', { name: /^save$/i }));
 
-  await screen.findByText('Could not save changes. Please try again.');
+  await screen.findByText('Some changes may not have been saved. Please review and try again.');
   expect(screen.getByRole('button', { name: /^save$/i })).not.toBeDisabled();
+});
+
+it('blocks Save and shows an error when a set field is left empty', async () => {
+  const calls: Array<{ path: string; init?: RequestInit }> = [];
+  vi.spyOn(client, 'apiFetch').mockImplementation(async (path: string, init?: RequestInit) => {
+    calls.push({ path, init });
+    if (path === '/api/sessions/s1' && (!init || !init.method)) return {
+      id: 's1', day_name: 'Push', finished_at: '2026-11-01T10:00:00Z',
+      sets: [{ id: 'set1', exercise_name: 'Bench', set_number: 1, weight_used: 40, reps_done: 8, effort: 'ok', extra_segments: [] }],
+    } as any;
+    return {} as any;
+  });
+  const qc = new QueryClient();
+  render(
+    <QueryClientProvider client={qc}><AuthProvider>
+      <MemoryRouter initialEntries={['/history/s1/edit']}>
+        <Routes><Route path="/history/:id/edit" element={<SessionEditPage />} /></Routes>
+      </MemoryRouter>
+    </AuthProvider></QueryClientProvider>
+  );
+
+  const reps = await screen.findByDisplayValue('8');
+  await userEvent.clear(reps);
+  await userEvent.click(screen.getByRole('button', { name: /^save$/i }));
+
+  await screen.findByText('Weight and reps are required for every set.');
+  expect(calls.some((c) => c.init?.method === 'PATCH')).toBe(false);
 });
