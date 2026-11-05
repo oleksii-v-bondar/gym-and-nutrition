@@ -12,6 +12,7 @@ import { SessionPage } from './session/SessionPage';
 import { ProgressPage } from './progress/ProgressPage';
 import { HistoryPage } from './history/HistoryPage';
 import { SessionDetailPage } from './history/SessionDetailPage';
+import { SessionEditPage } from './history/SessionEditPage';
 
 const qc = new QueryClient();
 export default function App() {
@@ -30,6 +31,7 @@ export default function App() {
             <Route path="/progress/:exId" element={<RequireAuth><ProgressPage /></RequireAuth>} />
             <Route path="/history" element={<RequireAuth><HistoryPage /></RequireAuth>} />
             <Route path="/history/:id" element={<RequireAuth><SessionDetailPage /></RequireAuth>} />
+            <Route path="/history/:id/edit" element={<RequireAuth><SessionEditPage /></RequireAuth>} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
