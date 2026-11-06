@@ -62,6 +62,24 @@ export async function latestCompletedSessionSets(userId: string, dayExerciseId: 
      ORDER BY sl.set_number`, [dayExerciseId, userId]);
   return r.rows;
 }
+export async function getActiveSessionForDay(userId: string, planDayId: string) {
+  const r = await query<{ id: string; started_at: string }>(
+    `SELECT id, started_at FROM workout_sessions
+     WHERE user_id=$1 AND plan_day_id=$2 AND finished_at IS NULL
+     ORDER BY started_at DESC, id DESC LIMIT 1`, [userId, planDayId]);
+  return r.rows[0] ?? null;
+}
+export async function listActiveSessions(userId: string) {
+  const r = await query(
+    `SELECT ws.id, ws.plan_day_id, ws.started_at, pd.name AS day_name, COUNT(sl.id)::int AS set_count
+     FROM workout_sessions ws
+     LEFT JOIN plan_days pd ON pd.id = ws.plan_day_id
+     LEFT JOIN set_logs sl ON sl.session_id = ws.id
+     WHERE ws.user_id=$1 AND ws.finished_at IS NULL
+     GROUP BY ws.id, pd.name
+     ORDER BY ws.started_at DESC`, [userId]);
+  return r.rows;
+}
 export async function updateSet(sessionId: string, setId: string, s: {
   weight_used: number; reps_done: number; effort: string;
   extra_segments: Array<{ weight: number; reps: number }>;

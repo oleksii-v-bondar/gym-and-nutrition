@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware.js';
 import { userOwnsPlanDay, userOwnsExercise } from '../plans/repo.js';
-import { startSession, logSet, finishSession, getSession, userOwnsSession, listUserSessions, deleteSession, updateSet } from './repo.js';
+import { startSession, logSet, finishSession, getSession, userOwnsSession, listUserSessions, deleteSession, updateSet, getActiveSessionForDay, listActiveSessions } from './repo.js';
 
 export const sessionsRouter = Router();
 sessionsRouter.use(requireAuth);
@@ -27,11 +27,17 @@ sessionsRouter.post('/', async (req, res) => {
   const p = startBody.safeParse(req.body);
   if (!p.success) { res.status(400).json({ error: 'invalid' }); return; }
   if (!(await userOwnsPlanDay(req.userId!, p.data.plan_day_id))) { res.status(404).json({ error: 'not found' }); return; }
+  const existing = await getActiveSessionForDay(req.userId!, p.data.plan_day_id);
+  if (existing) { res.status(200).json(existing); return; }
   res.status(201).json(await startSession(req.userId!, p.data.plan_day_id));
 });
 
 sessionsRouter.get('/', async (req, res) => {
   res.json(await listUserSessions(req.userId!));
+});
+
+sessionsRouter.get('/active', async (req, res) => {
+  res.json(await listActiveSessions(req.userId!));
 });
 
 sessionsRouter.get('/:id', async (req, res) => {
