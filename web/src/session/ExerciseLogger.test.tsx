@@ -50,3 +50,17 @@ it('ok logs immediately without a completed-reps prompt', async () => {
   expect(onLog).toHaveBeenCalledWith(60, 8, 'ok', []);
   expect(screen.queryByPlaceholderText('reps completed')).toBeNull();
 });
+
+it('shows a set-dots row reflecting completed sets', () => {
+  const onLog = vi.fn();
+  render(<ExerciseLogger exerciseName="Bench" targetReps={8} targetSets={3} setNumber={3}
+    suggestedWeight={60} suggestionReason="x" extraSegmentTargets={[]} onLog={onLog} />);
+  expect(screen.getByLabelText('2 of 3 sets completed')).toBeInTheDocument();
+});
+
+it('set-dots show 0 completed on the first set', () => {
+  const onLog = vi.fn();
+  render(<ExerciseLogger exerciseName="Bench" targetReps={8} targetSets={3} setNumber={1}
+    suggestedWeight={60} suggestionReason="x" extraSegmentTargets={[]} onLog={onLog} />);
+  expect(screen.getByLabelText('0 of 3 sets completed')).toBeInTheDocument();
+});

@@ -16,6 +16,7 @@ export function ExerciseLogger(props: Props) {
   const [pendingFail, setPendingFail] = useState(false);
   const [failedReps, setFailedReps] = useState('');
   const efforts: Effort[] = ['easy', 'ok', 'hard', 'failed'];
+  const completedSets = Math.min(Math.max(props.setNumber - 1, 0), props.targetSets);
 
   function setSegment(i: number, field: keyof Segment, value: string) {
     setSegments((prev) => prev.map((s, j) => (j === i ? { ...s, [field]: value } : s)));
@@ -36,6 +37,11 @@ export function ExerciseLogger(props: Props) {
     <div className="card">
       <h2>{props.exerciseName}</h2>
       <p style={{ color: 'var(--muted)' }}>Set {props.setNumber}/{props.targetSets} • target {props.targetReps} reps</p>
+      <div className="set-dots" aria-label={`${completedSets} of ${props.targetSets} sets completed`}>
+        {Array.from({ length: props.targetSets }, (_, i) => (
+          <span key={i} className={i < completedSets ? 'dot done' : i === props.setNumber - 1 ? 'dot current' : 'dot'} />
+        ))}
+      </div>
       <p>💡 {props.suggestionReason}</p>
 
       <div className="row" style={{ alignItems: 'flex-start' }}>

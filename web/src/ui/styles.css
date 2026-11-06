@@ -26,3 +26,7 @@ a:hover { color:#93c5fd; }
 input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.set-dots { display:flex; gap:6px; align-items:center; margin:4px 0 8px; }
+.set-dots .dot { width:12px; height:12px; border-radius:50%; border:2px solid var(--muted); box-sizing:border-box; }
+.set-dots .dot.done { background:var(--fg); border-color:var(--fg); }
+.set-dots .dot.current { background:var(--accent); border-color:var(--accent); }
