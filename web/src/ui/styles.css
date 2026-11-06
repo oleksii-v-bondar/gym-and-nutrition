@@ -30,3 +30,5 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
 .set-dots .dot { width:12px; height:12px; border-radius:50%; border:2px solid var(--muted); box-sizing:border-box; }
 .set-dots .dot.done { background:var(--fg); border-color:var(--fg); }
 .set-dots .dot.current { background:var(--accent); border-color:var(--accent); }
+.flash-pill { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--accent); color:#06240f; font-weight:700; padding:10px 18px; border-radius:999px; z-index:50; pointer-events:none; box-shadow:0 4px 14px rgba(0,0,0,0.4); animation:flash-fade 1.2s ease; }
+@keyframes flash-fade { 0%{opacity:0} 15%{opacity:1} 80%{opacity:1} 100%{opacity:0} }

@@ -17,6 +17,9 @@ export function SessionPage() {
   const [step, setStep] = useState(0);
   const [done, setDone] = useState(false);
   const startedRef = useRef(false);
+  const [flash, setFlash] = useState(false);
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (flashTimer.current) clearTimeout(flashTimer.current); }, []);
 
   const day = useQuery({ queryKey: ['day', dayId], queryFn: () => apiFetch<Day>(`/api/plan-days/${dayId}`) });
 
@@ -85,6 +88,9 @@ export function SessionPage() {
     await apiFetch(`/api/sessions/${sessionId}/sets`, { method: 'POST', body: JSON.stringify({
       day_exercise_id: exercise.id, set_number: setNumber, weight_used: weight, reps_done: reps, effort,
       extra_segments: segments }) });
+    setFlash(true);
+    if (flashTimer.current) clearTimeout(flashTimer.current);
+    flashTimer.current = setTimeout(() => setFlash(false), 1200);
     if (step + 1 >= steps.length) setDone(true);
     else setStep(step + 1);
   }
@@ -101,6 +107,7 @@ export function SessionPage() {
   return (
     <div className="app">
       <NavBar />
+      {flash && <div className="flash-pill">✓ Set logged</div>}
       <h1>{day.data.name}</h1>
       {done || !exercise ? (
         <div className="card">

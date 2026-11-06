@@ -112,3 +112,21 @@ it('resumes at the next unlogged set with the weight pre-filled from this sessio
   // weight pre-filled from the last logged set this session (52), not the suggestion (60)
   expect(screen.getAllByRole('spinbutton')[0]).toHaveValue(52);
 });
+
+it('shows a confirmation flash after logging a set', async () => {
+  const spy = vi.spyOn(client, 'apiFetch');
+  spy.mockImplementation(async (path: string, init?: RequestInit) => {
+    if (path === '/api/plan-days/d1') return { id: 'd1', name: 'Push', exercises: [
+      { id: 'e1', exercise_name: 'Bench', order_index: 0, target_sets: 2, target_reps: 8, rest_seconds: null, starting_weight: 40, extra_segments: [] },
+    ] } as any;
+    if (path === '/api/sessions' && init?.method === 'POST') return { id: 's1', started_at: 'now' } as any;
+    if (path === '/api/sessions/s1' && (!init || !init.method)) return { sets: [] } as any;
+    if (path === '/api/exercises/e1/suggestion') return { weight: 40, reason: 'x' } as any;
+    if (path === '/api/sessions/s1/sets' && init?.method === 'POST') return { id: 'set1' } as any;
+    return {} as any;
+  });
+  renderAt('d1');
+  await screen.findByText('Bench');
+  await userEvent.click(screen.getByRole('button', { name: 'ok' }));
+  expect(await screen.findByText(/set logged/i)).toBeInTheDocument();
+});
