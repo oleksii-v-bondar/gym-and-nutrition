@@ -5,7 +5,7 @@ import { apiFetch } from '../api/client';
 import { NavBar } from '../ui/NavBar';
 import { ExerciseLogger } from './ExerciseLogger';
 
-interface Exercise { id: string; exercise_name: string; target_sets: number; target_reps: number; extra_segments: number; }
+interface Exercise { id: string; exercise_name: string; target_sets: number; target_reps: number; extra_segments: Array<{ reps: number }>; }
 interface Day { id: string; name: string; is_superset: boolean; exercises: Exercise[]; }
 interface Suggestion { weight: number | null; reason: string; }
 type Effort = 'easy' | 'ok' | 'hard' | 'failed';
@@ -96,7 +96,7 @@ export function SessionPage() {
               setNumber={setNumber}
               suggestedWeight={suggestion.data?.weight ?? null}
               suggestionReason={suggestion.data?.reason ?? ''}
-              extraSegments={exercise.extra_segments ?? 0}
+              extraSegmentTargets={exercise.extra_segments ?? []}
               onLog={onLog}
             />
           )}

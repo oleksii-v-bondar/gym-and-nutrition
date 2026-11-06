@@ -25,7 +25,7 @@ it('starts a session and logs a set with the chosen effort', async () => {
   const spy = vi.spyOn(client, 'apiFetch');
   spy.mockImplementation(async (path: string, init?: RequestInit) => {
     if (path === '/api/plan-days/d1') return { id: 'd1', name: 'Push', exercises: [
-      { id: 'e1', exercise_name: 'Bench', order_index: 0, target_sets: 1, target_reps: 8, rest_seconds: null, starting_weight: 40, extra_segments: 0 },
+      { id: 'e1', exercise_name: 'Bench', order_index: 0, target_sets: 1, target_reps: 8, rest_seconds: null, starting_weight: 40, extra_segments: [] },
     ] } as any;
     if (path === '/api/sessions' && init?.method === 'POST') return { id: 's1', started_at: 'now' } as any;
     if (path === '/api/exercises/e1/suggestion') return { weight: 40, reason: 'Starting weight 40 kg' } as any;
@@ -45,8 +45,8 @@ it('runs a superset day round-major: one set of each exercise per round', async 
   const spy = vi.spyOn(client, 'apiFetch');
   spy.mockImplementation(async (path: string, init?: RequestInit) => {
     if (path === '/api/plan-days/sd') return { id: 'sd', name: 'Circuit', is_superset: true, exercises: [
-      { id: 'e1', exercise_name: 'A', order_index: 0, target_sets: 2, target_reps: 8, rest_seconds: null, starting_weight: 20, extra_segments: 0 },
-      { id: 'e2', exercise_name: 'B', order_index: 1, target_sets: 2, target_reps: 10, rest_seconds: null, starting_weight: 30, extra_segments: 0 },
+      { id: 'e1', exercise_name: 'A', order_index: 0, target_sets: 2, target_reps: 8, rest_seconds: null, starting_weight: 20, extra_segments: [] },
+      { id: 'e2', exercise_name: 'B', order_index: 1, target_sets: 2, target_reps: 10, rest_seconds: null, starting_weight: 30, extra_segments: [] },
     ] } as any;
     if (path === '/api/sessions' && init?.method === 'POST') return { id: 's1' } as any;
     if (path === '/api/exercises/e1/suggestion') return { weight: 20, reason: 'x' } as any;
@@ -75,7 +75,7 @@ it('keeps the entered weight/reps for the next set of the same exercise', async 
   const spy = vi.spyOn(client, 'apiFetch');
   spy.mockImplementation(async (path: string, init?: RequestInit) => {
     if (path === '/api/plan-days/d1') return { id: 'd1', name: 'Push', exercises: [
-      { id: 'e1', exercise_name: 'Bench', order_index: 0, target_sets: 2, target_reps: 8, rest_seconds: null, starting_weight: 40, extra_segments: 0 },
+      { id: 'e1', exercise_name: 'Bench', order_index: 0, target_sets: 2, target_reps: 8, rest_seconds: null, starting_weight: 40, extra_segments: [] },
     ] } as any;
     if (path === '/api/sessions' && init?.method === 'POST') return { id: 's1', started_at: 'now' } as any;
     if (path === '/api/exercises/e1/suggestion') return { weight: 60, reason: 'x' } as any;

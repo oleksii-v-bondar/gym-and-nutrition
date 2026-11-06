@@ -4,7 +4,7 @@ type Effort = 'easy' | 'ok' | 'hard' | 'failed';
 interface Segment { weight: string; reps: string; }
 interface Props {
   exerciseName: string; targetReps: number; targetSets: number; setNumber: number;
-  suggestedWeight: number | null; suggestionReason: string; extraSegments: number;
+  suggestedWeight: number | null; suggestionReason: string; extraSegmentTargets: Array<{ reps: number }>;
   onLog(weight: number, reps: number, effort: Effort, segments: Array<{ weight: number; reps: number }>): void;
 }
 const cap: CSSProperties = { fontSize: 11, color: 'var(--muted)', textAlign: 'center', display: 'block', marginTop: 2 };
@@ -12,7 +12,7 @@ export function ExerciseLogger(props: Props) {
   const [weight, setWeight] = useState<string>(props.suggestedWeight != null ? String(props.suggestedWeight) : '');
   const [reps, setReps] = useState<string>(String(props.targetReps));
   const [segments, setSegments] = useState<Segment[]>(
-    () => Array.from({ length: props.extraSegments }, () => ({ weight: '', reps: '' })));
+    () => props.extraSegmentTargets.map((t) => ({ weight: '', reps: String(t.reps) })));
   const [pendingFail, setPendingFail] = useState(false);
   const [failedReps, setFailedReps] = useState('');
   const efforts: Effort[] = ['easy', 'ok', 'hard', 'failed'];
