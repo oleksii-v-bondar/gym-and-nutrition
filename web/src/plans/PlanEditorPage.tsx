@@ -4,7 +4,7 @@ import { apiFetch } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { NavBar } from '../ui/NavBar';
 
-interface Exercise { id: string; exercise_name: string; order_index: number; target_sets: number; target_reps: number; rest_seconds: number | null; starting_weight: number | null; extra_segments: number; }
+interface Exercise { id: string; exercise_name: string; order_index: number; target_sets: number; target_reps: number; rest_seconds: number | null; starting_weight: number | null; extra_segments: Array<{ reps: number }>; }
 interface Day { id: string; name: string; order_index: number; is_superset: boolean; exercises: Exercise[]; }
 interface PlanTree { id: string; name: string; is_active: boolean; is_template: boolean; owned: boolean; days: Day[]; }
 interface Fork { id: string; dayIdMap: Record<string, string>; exerciseIdMap: Record<string, string>; }
@@ -116,10 +116,20 @@ export function PlanEditorPage() {
                 <input type="number" defaultValue={ex.target_reps}
                   onBlur={(e) => { if (Number(e.target.value) !== ex.target_reps) onPatchExercise(ex.id, { target_reps: Number(e.target.value) }); }} />
               </label>
-              <label style={{ display: 'flex', flexDirection: 'column', fontSize: 10, color: 'var(--muted)', width: 64 }}>drops/ups
-                <input type="number" defaultValue={ex.extra_segments} title="extra segments"
-                  onBlur={(e) => { if (Number(e.target.value) !== ex.extra_segments) onPatchExercise(ex.id, { extra_segments: Number(e.target.value) }); }} />
-              </label>
+              <div style={{ display: 'flex', flexDirection: 'column', fontSize: 10, color: 'var(--muted)', width: '100%' }}>drops/ups (target reps)
+                <div className="row" style={{ flexWrap: 'wrap', alignItems: 'center', gap: 4 }}>
+                  {ex.extra_segments.map((seg, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <input type="number" inputMode="numeric" style={{ width: 56 }} defaultValue={seg.reps} aria-label={`drop/up ${i + 1} reps`}
+                        onBlur={(e) => { const reps = Number(e.target.value); if (reps !== seg.reps) onPatchExercise(ex.id, { extra_segments: ex.extra_segments.map((s, j) => (j === i ? { reps } : s)) }); }} />
+                      <button className="secondary" style={{ width: 'auto' }} aria-label={`remove drop/up ${i + 1}`}
+                        onClick={() => onPatchExercise(ex.id, { extra_segments: ex.extra_segments.filter((_, j) => j !== i) })}>✕</button>
+                    </div>
+                  ))}
+                  <button className="secondary" style={{ width: 'auto' }}
+                    onClick={() => onPatchExercise(ex.id, { extra_segments: [...ex.extra_segments, { reps: ex.target_reps }] })}>+ drop/up</button>
+                </div>
+              </div>
               <Link to={`/progress/${ex.id}`}><button className="secondary">📈</button></Link>
               <button className="secondary" onClick={() => onDelExercise(ex.id)}>✕</button>
             </div>

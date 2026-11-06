@@ -25,7 +25,7 @@ it('shows read-only exercises, a superset marker and an edit link', async () => 
   vi.spyOn(client, 'apiFetch').mockImplementation(async (path: string) => {
     if (path === '/api/plans/p1') return { id: 'p1', name: 'P', is_active: false, is_template: false, owned: true,
       days: [{ id: 'd1', name: 'Push', order_index: 0, is_superset: true, exercises: [
-        { id: 'e1', exercise_name: 'Bench', order_index: 0, target_sets: 3, target_reps: 8, rest_seconds: null, starting_weight: 40, extra_segments: 2 },
+        { id: 'e1', exercise_name: 'Bench', order_index: 0, target_sets: 3, target_reps: 8, rest_seconds: null, starting_weight: 40, extra_segments: [{ reps: 8 }, { reps: 8 }] },
       ] }] } as any;
     return {} as any;
   });

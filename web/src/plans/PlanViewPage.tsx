@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../api/client';
 import { NavBar } from '../ui/NavBar';
 
-interface Exercise { id: string; exercise_name: string; order_index: number; target_sets: number; target_reps: number; rest_seconds: number | null; starting_weight: number | null; extra_segments: number; }
+interface Exercise { id: string; exercise_name: string; order_index: number; target_sets: number; target_reps: number; rest_seconds: number | null; starting_weight: number | null; extra_segments: Array<{ reps: number }>; }
 interface Day { id: string; name: string; order_index: number; is_superset: boolean; exercises: Exercise[]; }
 interface PlanTree { id: string; name: string; is_active: boolean; is_template: boolean; owned: boolean; days: Day[]; }
 interface Fork { id: string; dayIdMap: Record<string, string>; exerciseIdMap: Record<string, string>; }
@@ -40,7 +40,7 @@ export function PlanViewPage() {
           {day.exercises.length === 0 && <p style={{ color: 'var(--muted)' }}>No exercises</p>}
           {day.exercises.map((ex) => (
             <div key={ex.id} style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
-              <span>{ex.exercise_name} — {ex.target_sets}×{ex.target_reps}{ex.extra_segments > 0 ? ` +${ex.extra_segments} drop/ups` : ''}</span>
+              <span>{ex.exercise_name} — {ex.target_sets}×{ex.target_reps}{ex.extra_segments.length > 0 ? ` +${ex.extra_segments.length} drop/ups` : ''}</span>
               <Link to={`/progress/${ex.id}`}><button className="secondary" style={{ width: 'auto' }}>📈</button></Link>
             </div>
           ))}

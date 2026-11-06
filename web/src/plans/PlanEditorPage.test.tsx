@@ -28,7 +28,7 @@ it('shows days and exercises and can add an exercise', async () => {
     if (path.endsWith('/plan/p1') || path === '/api/plans/p1') {
       return { id: 'p1', name: 'P', is_active: false, is_template: false, owned: true,
         days: [{ id: 'd1', name: 'Push', order_index: 0, exercises: [
-          { id: 'e1', exercise_name: 'Bench', order_index: 0, target_sets: 3, target_reps: 8, rest_seconds: null, starting_weight: 40, extra_segments: 2 },
+          { id: 'e1', exercise_name: 'Bench', order_index: 0, target_sets: 3, target_reps: 8, rest_seconds: null, starting_weight: 40, extra_segments: [{ reps: 8 }, { reps: 8 }] },
         ] }] } as any;
     }
     if (path === '/api/plan-days/d1/exercises' && init?.method === 'POST') return { id: 'e2' } as any;
@@ -64,25 +64,25 @@ it('forks a non-owned template on first edit', async () => {
   await waitFor(() => expect(spy).toHaveBeenCalledWith('/api/plans/t1/fork', expect.objectContaining({ method: 'POST' })));
 });
 
-it('edits an exercise extra_segments count', async () => {
+it('edits a drop/up segment reps and PUTs the array', async () => {
   const spy = vi.spyOn(client, 'apiFetch');
   spy.mockImplementation(async (path: string, init?: RequestInit) => {
     if (path === '/api/plans/p1') return {
       id: 'p1', name: 'P', is_active: false, is_template: false, owned: true,
       days: [{ id: 'd1', name: 'Push', order_index: 0, exercises: [
-        { id: 'e1', exercise_name: 'Bench', order_index: 0, target_sets: 3, target_reps: 8, rest_seconds: null, starting_weight: 40, extra_segments: 2 },
+        { id: 'e1', exercise_name: 'Bench', order_index: 0, target_sets: 3, target_reps: 8, rest_seconds: null, starting_weight: 40, extra_segments: [{ reps: 10 }] },
       ] }],
     } as any;
     if (path === '/api/day-exercises/e1' && init?.method === 'PUT') return { id: 'e1' } as any;
     return {} as any;
   });
   renderAt('p1');
-  const input = await screen.findByTitle(/extra segments/i);
+  const input = await screen.findByLabelText(/drop\/up 1 reps/i);
   await userEvent.clear(input);
-  await userEvent.type(input, '3');
+  await userEvent.type(input, '12');
   input.blur();
   await waitFor(() => expect(spy).toHaveBeenCalledWith('/api/day-exercises/e1',
-    expect.objectContaining({ method: 'PUT', body: expect.stringContaining('"extra_segments":3') })));
+    expect.objectContaining({ method: 'PUT', body: expect.stringContaining('"extra_segments":[{"reps":12}]') })));
 });
 
 it('deletes the plan when confirmed', async () => {
