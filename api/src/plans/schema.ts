@@ -5,7 +5,7 @@ export const exerciseImport = z.object({
   target_reps: z.number().int().positive(),
   rest_seconds: z.number().int().nonnegative().nullable().optional(),
   starting_weight: z.number().nullable().optional(),
-  extra_segments: z.number().int().nonnegative().optional(),
+  extra_segments: z.array(z.object({ reps: z.number().int().positive() })).optional(),
 });
 export const dayImport = z.object({
   name: z.string().min(1),
@@ -38,5 +38,5 @@ export const exerciseUpsert = z.object({
   target_reps: z.number().int().positive().optional(),
   rest_seconds: z.number().int().nonnegative().nullable().optional(),
   starting_weight: z.number().nullable().optional(),
-  extra_segments: z.number().int().nonnegative().optional(),
+  extra_segments: z.array(z.object({ reps: z.number().int().positive() })).optional(),
 });

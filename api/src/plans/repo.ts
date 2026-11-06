@@ -18,8 +18,8 @@ export async function createPlanFromImport(userId: string, data: PlanImport): Pr
         const ex = day.exercises[e];
         await client.query(
           `INSERT INTO day_exercises (plan_day_id, exercise_name, order_index, target_sets, target_reps, rest_seconds, starting_weight, extra_segments)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-          [dayId, ex.exercise_name, e, ex.target_sets, ex.target_reps, ex.rest_seconds ?? null, ex.starting_weight ?? null, ex.extra_segments ?? 0]);
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb)`,
+          [dayId, ex.exercise_name, e, ex.target_sets, ex.target_reps, ex.rest_seconds ?? null, ex.starting_weight ?? null, JSON.stringify(ex.extra_segments ?? [])]);
       }
     }
     await client.query('COMMIT');
@@ -129,14 +129,17 @@ export async function deleteDay(dayId: string) { await query('DELETE FROM plan_d
 export async function addExercise(dayId: string, ex: any) {
   const r = await query<{ id: string }>(
     `INSERT INTO day_exercises (plan_day_id, exercise_name, order_index, target_sets, target_reps, rest_seconds, starting_weight, extra_segments)
-     VALUES ($1,$2,(SELECT COALESCE(MAX(order_index)+1,0) FROM day_exercises WHERE plan_day_id=$1),$3,$4,$5,$6,$7) RETURNING id`,
-    [dayId, ex.exercise_name, ex.target_sets, ex.target_reps, ex.rest_seconds ?? null, ex.starting_weight ?? null, ex.extra_segments ?? 0]);
+     VALUES ($1,$2,(SELECT COALESCE(MAX(order_index)+1,0) FROM day_exercises WHERE plan_day_id=$1),$3,$4,$5,$6,$7::jsonb) RETURNING id`,
+    [dayId, ex.exercise_name, ex.target_sets, ex.target_reps, ex.rest_seconds ?? null, ex.starting_weight ?? null, JSON.stringify(ex.extra_segments ?? [])]);
   return r.rows[0];
 }
 export async function updateExercise(exId: string, fields: Record<string, unknown>) {
   const cols = ['exercise_name','order_index','target_sets','target_reps','rest_seconds','starting_weight','extra_segments'];
   const sets: string[] = []; const vals: unknown[] = [];
-  for (const c of cols) if (fields[c] !== undefined) { vals.push(fields[c]); sets.push(`${c}=$${vals.length}`); }
+  for (const c of cols) if (fields[c] !== undefined) {
+    if (c === 'extra_segments') { vals.push(JSON.stringify(fields[c])); sets.push(`${c}=$${vals.length}::jsonb`); }
+    else { vals.push(fields[c]); sets.push(`${c}=$${vals.length}`); }
+  }
   if (!sets.length) return;
   vals.push(exId);
   await query(`UPDATE day_exercises SET ${sets.join(',')} WHERE id=$${vals.length}`, vals);
@@ -171,8 +174,8 @@ export async function forkPlan(userId: string, planId: string) {
     for (const e of exs.rows) {
       const ne = await client.query<{ id: string }>(
         `INSERT INTO day_exercises (plan_day_id, exercise_name, order_index, target_sets, target_reps, rest_seconds, starting_weight, extra_segments)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
-        [dayIdMap[e.plan_day_id], e.exercise_name, e.order_index, e.target_sets, e.target_reps, e.rest_seconds, e.starting_weight, e.extra_segments]);
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb) RETURNING id`,
+        [dayIdMap[e.plan_day_id], e.exercise_name, e.order_index, e.target_sets, e.target_reps, e.rest_seconds, e.starting_weight, JSON.stringify(e.extra_segments)]);
       exerciseIdMap[e.id] = ne.rows[0].id;
     }
     await client.query('COMMIT');

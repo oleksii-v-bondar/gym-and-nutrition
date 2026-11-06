@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS day_exercises (
   target_reps int NOT NULL,
   rest_seconds int,
   starting_weight numeric,
-  extra_segments int NOT NULL DEFAULT 0
+  extra_segments jsonb NOT NULL DEFAULT '[]'
 );
 
 CREATE TABLE IF NOT EXISTS workout_sessions (
