@@ -34,6 +34,7 @@ export function SessionPage() {
     enabled: !!sessionId,
   });
   const resumedRef = useRef(false);
+  const [resumed, setResumed] = useState(false);
 
   const exercises = day.data?.exercises ?? [];
   const isSuperset = day.data?.is_superset ?? false;
@@ -61,6 +62,7 @@ export function SessionPage() {
     const logged = sessionDetail.data.sets.length;
     if (logged >= steps.length) setDone(true);
     else setStep(logged);
+    setResumed(true);
   }, [day.data, sessionDetail.data, steps.length]);
 
   const resumeWeight = useMemo(() => {
@@ -92,7 +94,7 @@ export function SessionPage() {
 
   if (day.isLoading) return <div className="app"><NavBar />Loading…</div>;
   if (!day.data) return <div className="app"><NavBar />Day not found</div>;
-  if (!sessionId || !sessionDetail.isSuccess) return <div className="app"><NavBar />Loading…</div>;
+  if (!sessionId || !sessionDetail.isSuccess || !resumed) return <div className="app"><NavBar />Loading…</div>;
 
   return (
     <div className="app">
