@@ -28,6 +28,13 @@ export function SessionPage() {
     }
   }, [dayId, sessionId]);
 
+  const sessionDetail = useQuery({
+    queryKey: ['session', sessionId],
+    queryFn: () => apiFetch<{ sets: Array<{ day_exercise_id: string; set_number: number; weight_used: number }> }>(`/api/sessions/${sessionId}`),
+    enabled: !!sessionId,
+  });
+  const resumedRef = useRef(false);
+
   const exercises = day.data?.exercises ?? [];
   const isSuperset = day.data?.is_superset ?? false;
   // Flatten the session into an ordered list of (exercise, setNumber) steps.
@@ -47,6 +54,21 @@ export function SessionPage() {
   const current = steps[step];
   const exercise = current ? exercises[current.exIdx] : undefined;
   const setNumber = current?.setNumber ?? 1;
+
+  useEffect(() => {
+    if (resumedRef.current || !day.data || !sessionDetail.data) return;
+    resumedRef.current = true;
+    const logged = sessionDetail.data.sets.length;
+    if (logged >= steps.length) setDone(true);
+    else setStep(logged);
+  }, [day.data, sessionDetail.data, steps.length]);
+
+  const resumeWeight = useMemo(() => {
+    if (!exercise || !sessionDetail.data) return null;
+    const mine = sessionDetail.data.sets.filter((s) => s.day_exercise_id === exercise.id);
+    if (!mine.length) return null;
+    return mine.reduce((a, b) => (b.set_number > a.set_number ? b : a)).weight_used;
+  }, [exercise, sessionDetail.data]);
 
   const suggestion = useQuery({
     queryKey: ['suggestion', exercise?.id],
@@ -70,6 +92,7 @@ export function SessionPage() {
 
   if (day.isLoading) return <div className="app"><NavBar />Loading…</div>;
   if (!day.data) return <div className="app"><NavBar />Day not found</div>;
+  if (!sessionId || !sessionDetail.isSuccess) return <div className="app"><NavBar />Loading…</div>;
 
   return (
     <div className="app">
@@ -94,7 +117,7 @@ export function SessionPage() {
               targetReps={exercise.target_reps}
               targetSets={exercise.target_sets}
               setNumber={setNumber}
-              suggestedWeight={suggestion.data?.weight ?? null}
+              suggestedWeight={resumeWeight ?? suggestion.data?.weight ?? null}
               suggestionReason={suggestion.data?.reason ?? ''}
               extraSegmentTargets={exercise.extra_segments ?? []}
               onLog={onLog}
