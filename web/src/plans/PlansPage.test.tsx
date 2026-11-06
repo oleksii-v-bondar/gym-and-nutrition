@@ -15,6 +15,7 @@ function renderPage() {
 it('lists plans and badges templates', async () => {
   const spy = vi.spyOn(client, 'apiFetch');
   spy.mockImplementation(async (path: string) => {
+    if (path === '/api/sessions/active') return [] as any;
     if (path === '/api/plans') return [
       { id: 'p1', name: 'Mine', is_active: false, is_template: false, owned: true },
       { id: 't1', name: 'Shared', is_active: false, is_template: true, owned: false },

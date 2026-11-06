@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../api/client';
 import { NavBar } from '../ui/NavBar';
+import { InProgressBanner } from './InProgressBanner';
 
 interface PlanRow { id: string; name: string; is_active: boolean; is_template: boolean; owned: boolean; }
 export function PlansPage() {
@@ -9,6 +10,7 @@ export function PlansPage() {
   return (
     <div className="app">
       <NavBar />
+      <InProgressBanner />
       <h1>Your plans</h1>
       {plans.isLoading && <p>Loading…</p>}
       {plans.data?.map((p) => (
