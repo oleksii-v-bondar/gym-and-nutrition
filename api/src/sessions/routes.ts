@@ -11,16 +11,16 @@ const startBody = z.object({ plan_day_id: z.string().uuid() });
 const setBody = z.object({
   day_exercise_id: z.string().uuid(),
   set_number: z.number().int().positive(),
-  weight_used: z.number().nonnegative(),
+  weight_used: z.number(),
   reps_done: z.number().int().nonnegative(),
   effort: z.enum(['easy', 'ok', 'hard', 'failed']),
-  extra_segments: z.array(z.object({ weight: z.number().nonnegative(), reps: z.number().int().nonnegative() })).optional(),
+  extra_segments: z.array(z.object({ weight: z.number(), reps: z.number().int().nonnegative() })).optional(),
 });
 const patchSetBody = z.object({
-  weight_used: z.number().nonnegative(),
+  weight_used: z.number(),
   reps_done: z.number().int().nonnegative(),
   effort: z.enum(['easy', 'ok', 'hard', 'failed']),
-  extra_segments: z.array(z.object({ weight: z.number().nonnegative(), reps: z.number().int().nonnegative() })),
+  extra_segments: z.array(z.object({ weight: z.number(), reps: z.number().int().nonnegative() })),
 });
 
 sessionsRouter.post('/', async (req, res) => {

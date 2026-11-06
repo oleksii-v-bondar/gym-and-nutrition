@@ -18,7 +18,7 @@ export function suggestNextWeight(input: SuggestInput): Suggestion {
   const anyFailed = lastSets.some((s) => s.effort === 'failed');
   const missedReps = lastSets.some((s) => s.reps_done < targetReps);
   if (anyFailed || missedReps) {
-    return { weight: Math.max(0, lastWeight - increment), reason: `Deload −${increment} kg (missed reps / failed a set)` };
+    return { weight: lastWeight - increment, reason: `Deload −${increment} kg (missed reps / failed a set)` };
   }
   const allEasy = lastSets.every((s) => s.effort === 'easy');
   if (allEasy) {

@@ -44,11 +44,11 @@ it('missed target reps (no failed flag) -> deload', () => {
   expect(r.weight).toBe(37.5);
 });
 
-it('deload floors at 0', () => {
+it('deload reduces weight without flooring at 0', () => {
   const r = suggestNextWeight({ ...base, lastSets: [
     { reps_done: 2, effort: 'failed', weight_used: 2 },
   ] });
-  expect(r.weight).toBe(0);
+  expect(r.weight).toBe(-0.5);
 });
 
 it('uses the heaviest set as the reference weight', () => {
@@ -57,4 +57,11 @@ it('uses the heaviest set as the reference weight', () => {
     { reps_done: 8, effort: 'easy', weight_used: 42.5 },
   ] });
   expect(r.weight).toBe(45);
+});
+
+it('assisted (negative) weight deloads further instead of clamping at 0', () => {
+  const r = suggestNextWeight({ ...base, lastSets: [
+    { reps_done: 5, effort: 'failed', weight_used: -20 },
+  ] });
+  expect(r.weight).toBe(-22.5);
 });

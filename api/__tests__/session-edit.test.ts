@@ -34,7 +34,7 @@ it('rejects an invalid body with 400', async () => {
   const H = { Authorization: `Bearer ${await auth('editbad')}` };
   const { sessionId, setId } = await seedLoggedSet(H);
   const r = await request(app).patch(`/api/sessions/${sessionId}/sets/${setId}`).set(H)
-    .send({ weight_used: -1, reps_done: 8, effort: 'ok', extra_segments: [] });
+    .send({ weight_used: 50, reps_done: 'not a number', effort: 'ok', extra_segments: [] });
   expect(r.status).toBe(400);
 });
 
