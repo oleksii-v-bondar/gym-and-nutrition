@@ -40,8 +40,8 @@ export function ExerciseLogger(props: Props) {
 
       <div className="row" style={{ alignItems: 'flex-start' }}>
         <div style={{ flex: 1 }}>
-          <input type="number" inputMode="numeric" value={weight} onChange={(e) => setWeight(e.target.value)} />
-          <span style={cap}>weight (0 = bodyweight)</span>
+          <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} />
+          <span style={cap}>weight (0 = bodyweight, −assisted)</span>
         </div>
         <div style={{ flex: 1 }}>
           <input type="number" inputMode="numeric" value={reps} onChange={(e) => setReps(e.target.value)} />
@@ -52,7 +52,7 @@ export function ExerciseLogger(props: Props) {
       {segments.map((s, i) => (
         <div key={i} style={{ marginTop: 8 }}>
           <div className="row" style={{ alignItems: 'center' }}>
-            <div style={{ flex: 1 }}><input type="number" inputMode="numeric" placeholder="weight" value={s.weight} onChange={(e) => setSegment(i, 'weight', e.target.value)} /></div>
+            <div style={{ flex: 1 }}><input type="number" placeholder="weight" value={s.weight} onChange={(e) => setSegment(i, 'weight', e.target.value)} /></div>
             <div style={{ flex: 1 }}><input type="number" inputMode="numeric" placeholder="reps" value={s.reps} onChange={(e) => setSegment(i, 'reps', e.target.value)} /></div>
             <button className="secondary" style={{ width: 'auto' }} onClick={() => setSegments((prev) => prev.filter((_, j) => j !== i))}>✕</button>
           </div>

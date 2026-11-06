@@ -12,3 +12,7 @@ it('formats segments, dropping 0 weight to just reps', () => {
   expect(formatSegment(20, 12)).toBe('20×12');
   expect(formatSegment(0, 8)).toBe('×8');
 });
+
+it('formats a negative weight as assisted (Gravitron)', () => {
+  expect(formatSetLine(-20, 10, 'ok')).toBe('Assisted 20 kg × 10 (ok)');
+});

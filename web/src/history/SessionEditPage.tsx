@@ -104,7 +104,7 @@ export function SessionEditPage() {
                 <p style={{ color: 'var(--muted)', fontSize: 13 }}>Set {s.set_number}</p>
                 <div className="row" style={{ alignItems: 'flex-start' }}>
                   <div style={{ flex: 1 }}>
-                    <input type="number" inputMode="numeric" value={d.weight} onChange={(e) => upd(s.id, { weight: e.target.value })} />
+                    <input type="number" value={d.weight} onChange={(e) => upd(s.id, { weight: e.target.value })} />
                     <span style={cap}>weight (0 = bodyweight)</span>
                   </div>
                   <div style={{ flex: 1 }}>
@@ -120,7 +120,7 @@ export function SessionEditPage() {
                 </div>
                 {d.segments.map((sg, i) => (
                   <div className="row" key={i} style={{ marginTop: 6 }}>
-                    <div style={{ flex: 1 }}><input type="number" inputMode="numeric" placeholder="weight" value={sg.weight} onChange={(e) => updSeg(s.id, i, 'weight', e.target.value)} /></div>
+                    <div style={{ flex: 1 }}><input type="number" placeholder="weight" value={sg.weight} onChange={(e) => updSeg(s.id, i, 'weight', e.target.value)} /></div>
                     <div style={{ flex: 1 }}><input type="number" inputMode="numeric" placeholder="reps" value={sg.reps} onChange={(e) => updSeg(s.id, i, 'reps', e.target.value)} /></div>
                   </div>
                 ))}
