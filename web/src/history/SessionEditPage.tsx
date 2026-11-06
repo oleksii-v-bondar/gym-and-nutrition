@@ -105,7 +105,7 @@ export function SessionEditPage() {
                 <div className="row" style={{ alignItems: 'flex-start' }}>
                   <div style={{ flex: 1 }}>
                     <input type="number" value={d.weight} onChange={(e) => upd(s.id, { weight: e.target.value })} />
-                    <span style={cap}>weight (0 = bodyweight)</span>
+                    <span style={cap}>weight (0 = bodyweight, −assisted)</span>
                   </div>
                   <div style={{ flex: 1 }}>
                     <input type="number" inputMode="numeric" value={d.reps} onChange={(e) => upd(s.id, { reps: e.target.value })} />

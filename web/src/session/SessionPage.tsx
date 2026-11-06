@@ -56,6 +56,8 @@ export function SessionPage() {
   const exercise = current ? exercises[current.exIdx] : undefined;
   const setNumber = current?.setNumber ?? 1;
 
+  // Derive the resume point once: start at the first unlogged set (= number of sets
+  // already logged this session). resumedRef keeps a background refetch from resetting it.
   useEffect(() => {
     if (resumedRef.current || !day.data || !sessionDetail.data) return;
     resumedRef.current = true;

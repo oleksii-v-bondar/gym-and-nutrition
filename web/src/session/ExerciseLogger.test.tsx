@@ -30,6 +30,18 @@ it('failed shows a completed-reps prompt pre-filled with current reps, then logs
   expect(onLog).toHaveBeenCalledWith(0, 5, 'failed', []);
 });
 
+it('disables the failed Confirm button until a completed-reps value is entered', async () => {
+  const onLog = vi.fn();
+  render(<ExerciseLogger exerciseName="Pull-up" targetReps={8} targetSets={3} setNumber={1}
+    suggestedWeight={0} suggestionReason="x" extraSegmentTargets={[]} onLog={onLog} />);
+  await userEvent.click(screen.getByRole('button', { name: 'failed' }));
+  const input = screen.getByPlaceholderText('reps completed');
+  await userEvent.clear(input);
+  expect(screen.getByRole('button', { name: /confirm/i })).toBeDisabled();
+  await userEvent.type(input, '5');
+  expect(screen.getByRole('button', { name: /confirm/i })).not.toBeDisabled();
+});
+
 it('ok logs immediately without a completed-reps prompt', async () => {
   const onLog = vi.fn();
   render(<ExerciseLogger exerciseName="Bench" targetReps={8} targetSets={3} setNumber={1}

@@ -14,6 +14,7 @@ export function InProgressBanner() {
   if (!active.data || active.data.length === 0) return null;
   return (
     <>
+      {discard.isError && <p className="card" style={{ color: 'var(--danger)' }}>Couldn't discard — please try again.</p>}
       {active.data.map((s) => (
         <div className="card" key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: '3px solid var(--accent)' }}>
           <div>
