@@ -64,3 +64,14 @@ it('set-dots show 0 completed on the first set', () => {
     suggestedWeight={60} suggestionReason="x" extraSegmentTargets={[]} onLog={onLog} />);
   expect(screen.getByLabelText('0 of 3 sets completed')).toBeInTheDocument();
 });
+
+it('clamps set-dots for the superset edge (setNumber beyond targetSets)', () => {
+  const onLog = vi.fn();
+  const { container } = render(<ExerciseLogger exerciseName="A" targetReps={8} targetSets={2} setNumber={3}
+    suggestedWeight={20} suggestionReason="x" extraSegmentTargets={[]} onLog={onLog} />);
+  expect(screen.getByLabelText('2 of 2 sets completed')).toBeInTheDocument();
+  const dots = container.querySelectorAll('.set-dots .dot');
+  expect(dots).toHaveLength(2);
+  expect(container.querySelector('.set-dots .dot.current')).toBeNull();
+  dots.forEach((d) => expect(d).toHaveClass('done'));
+});
