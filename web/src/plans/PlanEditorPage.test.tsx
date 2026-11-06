@@ -151,3 +151,28 @@ it('admin can copy a template into a personal plan', async () => {
   await userEvent.click(screen.getByRole('button', { name: /copy from template/i }));
   await waitFor(() => expect(spy).toHaveBeenCalledWith('/api/plans/t1/fork', expect.objectContaining({ method: 'POST' })));
 });
+
+it('removing a mid-list drop/up keeps the remaining target reps correct', async () => {
+  let segments = [{ reps: 10 }, { reps: 20 }, { reps: 30 }];
+  const spy = vi.spyOn(client, 'apiFetch');
+  spy.mockImplementation(async (path: string, init?: RequestInit) => {
+    if (path === '/api/plans/p1') return {
+      id: 'p1', name: 'P', is_active: false, is_template: false, owned: true,
+      days: [{ id: 'd1', name: 'Push', order_index: 0, exercises: [
+        { id: 'e1', exercise_name: 'Bench', order_index: 0, target_sets: 3, target_reps: 8, rest_seconds: null, starting_weight: 40, extra_segments: segments },
+      ] }],
+    } as any;
+    if (path === '/api/day-exercises/e1' && init?.method === 'PUT') {
+      segments = JSON.parse(init!.body as string).extra_segments;
+      return { id: 'e1' } as any;
+    }
+    return {} as any;
+  });
+  renderAt('p1');
+  await screen.findByLabelText(/drop\/up 1 reps/i);
+  await userEvent.click(screen.getByLabelText(/remove drop\/up 1/i));
+  await waitFor(() => {
+    expect(screen.getByLabelText(/drop\/up 1 reps/i)).toHaveValue(20);
+    expect(screen.getByLabelText(/drop\/up 2 reps/i)).toHaveValue(30);
+  });
+});

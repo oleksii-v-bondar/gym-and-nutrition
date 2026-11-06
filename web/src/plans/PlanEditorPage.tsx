@@ -119,7 +119,7 @@ export function PlanEditorPage() {
               <div style={{ display: 'flex', flexDirection: 'column', fontSize: 10, color: 'var(--muted)', width: '100%' }}>drops/ups (target reps)
                 <div className="row" style={{ flexWrap: 'wrap', alignItems: 'center', gap: 4 }}>
                   {ex.extra_segments.map((seg, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <div key={`${i}:${seg.reps}`} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                       <input type="number" inputMode="numeric" style={{ width: 56 }} defaultValue={seg.reps} aria-label={`drop/up ${i + 1} reps`}
                         onBlur={(e) => { const reps = Number(e.target.value); if (reps !== seg.reps) onPatchExercise(ex.id, { extra_segments: ex.extra_segments.map((s, j) => (j === i ? { reps } : s)) }); }} />
                       <button className="secondary" style={{ width: 'auto' }} aria-label={`remove drop/up ${i + 1}`}
